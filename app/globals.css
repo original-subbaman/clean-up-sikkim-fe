@@ -1,26 +1,54 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: 0 0% 100%;
+    --foreground: 153 38% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 153 38% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 153 38% 15%;
+    --primary: 153 40% 30%; /* #2D6A4F */
+    --primary-foreground: 153 40% 98%;
+    --secondary: 153 20% 96%;
+    --secondary-foreground: 153 40% 20%;
+    --muted: 153 10% 96%;
+    --muted-foreground: 153 10% 45%;
+    --accent: 153 20% 92%;
+    --accent-foreground: 153 40% 25%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 153 20% 90%;
+    --input: 153 20% 90%;
+    --ring: 153 40% 30%;
+    --radius: 0.5rem; /* ROUND_EIGHT */
+  }
+
+  .dark {
+    --background: 153 40% 5%;
+    --foreground: 153 10% 98%;
+    --card: 153 40% 8%;
+    --card-foreground: 153 10% 98%;
+    --popover: 153 40% 8%;
+    --popover-foreground: 153 10% 98%;
+    --primary: 153 40% 45%;
+    --primary-foreground: 153 40% 5%;
+    --secondary: 153 30% 15%;
+    --secondary-foreground: 153 10% 98%;
+    --muted: 153 30% 15%;
+    --muted-foreground: 153 10% 65%;
+    --accent: 153 30% 20%;
+    --accent-foreground: 153 10% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 153 30% 18%;
+    --input: 153 30% 18%;
+    --ring: 153 40% 45%;
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: "Plus Jakarta Sans", Arial, Helvetica, sans-serif;
 }
