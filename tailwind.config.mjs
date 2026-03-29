@@ -2,6 +2,12 @@ import defaultTheme from "tailwindcss/defaultTheme";
 
 /** @type {import('tailwindcss').Config} */
 const config = {
+  safelist: [
+    "text-primary",
+    "text-primary-foreground",
+    "bg-primary",
+    "bg-primary-foreground",
+  ],
   darkMode: ["class"],
   content: [
     "./app/**/*.{ts,tsx,js,jsx,mdx}",

@@ -1,17 +1,68 @@
 @import "tailwindcss";
 
+@theme {
+  /* Font */
+  --font-sans: "Plus Jakarta Sans", Arial, Helvetica, sans-serif;
+
+  /* Border radius */
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  /* Colors — mapped from CSS variables */
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-tertiary: hsl(var(--tertiary));
+  --color-tertiary-foreground: hsl(var(--tertiary-foreground));
+
+  --color-neutral-custom: hsl(var(--neutral));
+  --color-neutral-custom-foreground: hsl(var(--neutral-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+}
+
 @layer base {
   :root {
+    --radius: 0.5rem;
+
     --background: 0 0% 100%;
     --foreground: 153 38% 15%;
     --card: 0 0% 100%;
     --card-foreground: 153 38% 15%;
     --popover: 0 0% 100%;
     --popover-foreground: 153 38% 15%;
-    --primary: 153 40% 30%; /* #2D6A4F */
+    --primary: 153 58% 42%;
     --primary-foreground: 153 40% 98%;
-    --secondary: 153 20% 96%;
-    --secondary-foreground: 153 40% 20%;
+    --secondary: 22 19% 31%;
+    --secondary-foreground: 22 19% 91%;
+    --tertiary: 28 100% 45%;
+    --tertiary-foreground: 0 0% 100%;
+    --neutral: 90 2% 46%;
+    --neutral-foreground: 0 0% 100%;
     --muted: 153 10% 96%;
     --muted-foreground: 153 10% 45%;
     --accent: 153 20% 92%;
@@ -21,7 +72,6 @@
     --border: 153 20% 90%;
     --input: 153 20% 90%;
     --ring: 153 40% 30%;
-    --radius: 0.5rem; /* ROUND_EIGHT */
   }
 
   .dark {
@@ -31,10 +81,14 @@
     --card-foreground: 153 10% 98%;
     --popover: 153 40% 8%;
     --popover-foreground: 153 10% 98%;
-    --primary: 153 40% 45%;
-    --primary-foreground: 153 40% 5%;
-    --secondary: 153 30% 15%;
-    --secondary-foreground: 153 10% 98%;
+    --primary: 153 58% 42%;
+    --primary-foreground: 153 40% 98%;
+    --secondary: 22 19% 31%;
+    --secondary-foreground: 22 19% 91%;
+    --tertiary: 28 100% 45%;
+    --tertiary-foreground: 0 0% 100%;
+    --neutral: 90 2% 46%;
+    --neutral-foreground: 0 0% 100%;
     --muted: 153 30% 15%;
     --muted-foreground: 153 10% 65%;
     --accent: 153 30% 20%;
@@ -45,10 +99,13 @@
     --input: 153 30% 18%;
     --ring: 153 40% 45%;
   }
-}
 
-body {
-  background: hsl(var(--background));
-  color: hsl(var(--foreground));
-  font-family: "Plus Jakarta Sans", Arial, Helvetica, sans-serif;
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
 }
