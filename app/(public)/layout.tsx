@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
-import Footer from "../components/Footer";
-import Navbar from "../components/Navbar";
+import Footer from "../../components/Footer";
+import Navbar from "../../components/Navbar";
 import "./globals.css";
 import { Plus_Jakarta_Sans } from "next/font/google";
-import { LandingPageRoutes } from "@/lib/routes";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -27,8 +26,9 @@ export default function RootLayout({
       className={`${plusJakartaSans.variable} h-full antialiased font-sans`}
     >
       <body className="min-h-full flex flex-col">
-        <Navbar routes={LandingPageRoutes} />
+        <Navbar routes={[]} />
         <main className="flex-1 container mx-auto px-4 py-8">{children}</main>
+        <Footer />
       </body>
     </html>
   );
