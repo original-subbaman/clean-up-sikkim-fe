@@ -1,8 +1,8 @@
 export const LandingPageRoutes = [
-  { path: "/mission", label: "Our Mission" },
-  { path: "/pin-waste", label: "Pin Waste" },
-  { path: "/rewards", label: "Rewards" },
-  { path: "/community", label: "Community" },
+  { path: "#mission", label: "Our Mission" },
+  { path: "#how-it-works", label: "How It Works" },
+  { path: "#impact", label: "Impact" },
+  { path: "#call-to-action", label: "Call To Action" },
 ] as NavLinkItem[];
 
 export type NavLinkItem = {

@@ -2,8 +2,15 @@ import type { Metadata } from "next";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import "./globals.css";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Plus_Jakarta_Sans, Be_Vietnam_Pro } from "next/font/google";
 import { LandingPageRoutes } from "@/lib/routes";
+
+const beVietnamPro = Be_Vietnam_Pro({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
+  weight: "100",
+});
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -24,7 +31,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${plusJakartaSans.variable} h-full antialiased font-sans`}
+      className={`${plusJakartaSans.variable} ${beVietnamPro.variable} h-full antialiased font-sans`}
     >
       <body className="min-h-full flex flex-col">
         <Navbar routes={LandingPageRoutes} />

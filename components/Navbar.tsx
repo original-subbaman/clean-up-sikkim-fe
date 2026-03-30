@@ -44,7 +44,7 @@ export default function Navbar({ routes }: { routes: readonly NavLinkItem[] }) {
   const pathName = usePathname();
   const isAuthenticated = false; // Replace with actual authentication logic
   return (
-    <nav className="w-full py-4 px-8 shadow-2xs">
+    <nav className="w-full py-4 px-8 shadow-2xs sticky top-0 z-50 bg-background">
       <div className="container mx-auto flex items-center justify-between">
         <p className="font-bold text-lg text-primary mr-10">Clean Up Sikkim</p>
         <div className="space-x-4 flex ">
