@@ -2,7 +2,7 @@ import { HandHeart, Pin, Gift, Users } from "lucide-react";
 
 export default function Page() {
   return (
-    <main className="">
+    <main className="flex-1 container mx-auto px-4 py-8">
       <HeroSection />
       <HowItWorksSection />
       <ImpactSection />
