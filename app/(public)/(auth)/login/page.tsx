@@ -77,7 +77,7 @@ function Page() {
               Don't have an account?
               <a
                 className="text-primary font-bold hover:underline ml-1"
-                href="#"
+                href="/signup"
               >
                 Sign up
               </a>

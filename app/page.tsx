@@ -213,7 +213,7 @@ function CallToActionSection() {
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <a
-              href="/join"
+              href="/login"
               className="bg-primary text-on-primary px-10 py-5 rounded-2xl font-bold editorial-shadow hover:scale-105 transition-transform"
             >
               Join The Movement
