@@ -1,13 +1,15 @@
 "use client";
-
-import { Label } from "@/components/ui/label";
+import { Eye, EyeClosed } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SignupSchema, signupSchema } from "@/lib/schemas/signup-schema";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { useState } from "react";
 
 function Page() {
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const form = useForm<SignupSchema>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
@@ -16,6 +18,10 @@ function Page() {
       password: "",
     },
   });
+
+  function togglePasswordVisibility() {
+    setPasswordVisible((prev) => !prev);
+  }
 
   return (
     <>
@@ -55,62 +61,102 @@ function Page() {
             onSubmit={form.handleSubmit((data) => console.log(data))}
           >
             <div>
-              <Label
-                htmlFor="username"
-                className="block text-sm font-label font-bold text-on-surface-variant mb-2 ml-1"
-              >
-                Username
-              </Label>
-              <Input
-                id="username"
+              <Controller
                 name="username"
-                placeholder="ecoguardian_42"
-                type="text"
-                className="w-full bg-surface-container-low border-none focus:ring-2 focus:ring-primary/20 rounded-xl px-5 py-4 text-on-surface placeholder:text-outline transition-all duration-200"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field>
+                    <FieldLabel
+                      htmlFor="username"
+                      className="block text-sm font-label font-bold text-on-surface-variant mb-2 ml-1"
+                    >
+                      Username
+                    </FieldLabel>
+                    <Input
+                      {...field}
+                      id="username"
+                      name="username"
+                      aria-invalid={fieldState.invalid}
+                      placeholder="ecoguardian_42"
+                      type="text"
+                      className="w-full bg-surface-container-low border-none focus:ring-2 focus:ring-primary/20 rounded-xl px-5 py-4 text-on-surface placeholder:text-outline transition-all duration-200"
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
               />
             </div>
             <div>
-              <Label
-                htmlFor="email"
-                className="block text-sm font-label font-bold text-on-surface-variant mb-2 ml-1"
-              >
-                Email Address
-              </Label>
-              <Input
-                id="email"
+              <Controller
                 name="email"
-                placeholder="hello@example.com"
-                type="email"
-                className="w-full bg-surface-container-low border-none focus:ring-2 focus:ring-primary/20 rounded-xl px-5 py-4 text-on-surface placeholder:text-outline transition-all duration-200"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field>
+                    <FieldLabel
+                      htmlFor="email"
+                      className="block text-sm font-label font-bold text-on-surface-variant mb-2 ml-1"
+                    >
+                      Email Address
+                    </FieldLabel>
+                    <Input
+                      {...field}
+                      id="email"
+                      name="email"
+                      aria-invalid={fieldState.invalid}
+                      placeholder="hello@example.com"
+                      type="email"
+                      className="w-full bg-surface-container-low border-none focus:ring-2 focus:ring-primary/20 rounded-xl px-5 py-4 text-on-surface placeholder:text-outline transition-all duration-200"
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
               />
             </div>
             <div>
-              <Label
-                htmlFor="password"
-                className="block text-sm font-label font-bold text-on-surface-variant mb-2 ml-1"
-              >
-                Password
-              </Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  name="password"
-                  placeholder="••••••••"
-                  type="password"
-                  className="w-full bg-surface-container-low border-none focus:ring-2 focus:ring-primary/20 rounded-xl px-5 py-4 text-on-surface placeholder:text-outline transition-all duration-200"
-                />
-                <Button
-                  type="button"
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-outline hover:text-primary"
-                  variant="ghost"
-                  size="icon"
-                >
-                  <span className="material-symbols-outlined">visibility</span>
-                </Button>
-              </div>
-              <p className="mt-2 text-[0.7rem] text-outline px-1">
-                Must be at least 8 characters with a symbol.
-              </p>
+              <Controller
+                name="password"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field>
+                    <FieldLabel
+                      htmlFor="password"
+                      className="block text-sm font-label font-bold text-on-surface-variant mb-2 ml-1"
+                    >
+                      Password
+                    </FieldLabel>
+                    <div className="relative">
+                      <Input
+                        {...field}
+                        id="password"
+                        name="password"
+                        aria-invalid={fieldState.invalid}
+                        placeholder="••••••••"
+                        type={passwordVisible ? "text" : "password"}
+                        className="w-full bg-surface-container-low border-none focus:ring-2 focus:ring-primary/20 rounded-xl px-5 py-4 text-on-surface placeholder:text-outline transition-all duration-200"
+                      />
+                      <Button
+                        type="button"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-outline hover:text-primary"
+                        variant="ghost"
+                        size="icon"
+                        onClick={togglePasswordVisibility}
+                      >
+                        {passwordVisible ? <Eye /> : <EyeClosed />}
+                      </Button>
+                    </div>
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                    <p className="mt-2 text-[0.7rem] text-outline px-1">
+                      Must be at least 8 characters with a symbol.
+                    </p>
+                  </Field>
+                )}
+              />
             </div>
             <div className="pt-2">
               <Button type="submit" size="lg" className="w-full p-5">
