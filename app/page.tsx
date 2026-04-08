@@ -1,4 +1,5 @@
 import { HandHeart, Pin, Gift, Users } from "lucide-react";
+import Link from "next/link";
 
 export default function Page() {
   return (
@@ -28,12 +29,18 @@ function HeroSection() {
           collective action, digital mapping, and meaningful rewards.
         </p>
         <div className="flex flex-wrap gap-4">
-          <button className="bg-primary text-white px-8 py-4 rounded-xl font-semibold editorial-shadow flex items-center gap-2 group transition-all duration-300 hover:scale-105 hover:shadow-lg">
+          <Link
+            href="/login"
+            className="bg-primary text-white px-8 py-4 rounded-xl font-semibold editorial-shadow flex items-center gap-2 group transition-all duration-300 hover:scale-105 hover:shadow-lg"
+          >
             Start Pinning
-          </button>
-          <button className="bg-neutral-300 text-on-surface px-8 py-4 rounded-xl font-semibold transition-all hover:bg-surface-container-high hover:scale-105 hover:shadow-lg">
+          </Link>
+          <Link
+            href="/map"
+            className="bg-neutral-300 text-on-surface px-8 py-4 rounded-xl font-semibold transition-all hover:bg-surface-container-high hover:scale-105 hover:shadow-lg"
+          >
             View Live Map
-          </button>
+          </Link>
         </div>
       </div>
       <div className="lg:w-1/2 relative mt-12 lg:mt-0">
