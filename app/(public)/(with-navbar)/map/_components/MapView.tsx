@@ -2,12 +2,14 @@
 import { useRef, useEffect } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
+import "../../../../mapbox-popup.css";
 
 const accessToken = process.env.NEXT_PUBLIC_MAPBOX_API_KEY;
 
 interface MarkerData {
   lng: number;
   lat: number;
+  title?: string;
   pinId: string;
 }
 
@@ -30,10 +32,11 @@ function Map({ markers, onMarkerClick }: MapProps) {
 
     // Add markers with click handlers if markers are provided
     (markers ?? []).forEach((markerData) => {
-      const { lng, lat, pinId } = markerData;
+      const { lng, lat, pinId, title } = markerData;
       const marker = new mapboxgl.Marker()
         .setLngLat([lng, lat])
         .addTo(mapRef.current!);
+
       const el = marker.getElement();
       el.style.cursor = "pointer";
 
@@ -54,6 +57,19 @@ function Map({ markers, onMarkerClick }: MapProps) {
           onMarkerClick(pinId, markerData);
         }
       });
+
+      // add popover
+      const popup = new mapboxgl.Popup({
+        className: "popup-title popup-subtitle",
+        closeButton: false,
+      }).setHTML(`
+      <div>
+        <p class="popup-title">${title}</p>
+        <p class="popup-subtitle">${lat.toFixed(3)}, ${lng.toFixed(3)}</p>
+      </div>`);
+      el.addEventListener("mouseenter", () => popup.addTo(mapRef.current!));
+      el.addEventListener("mouseleave", () => popup.remove());
+      marker.setPopup(popup);
     });
 
     return () => {

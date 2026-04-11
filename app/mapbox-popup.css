@@ -1,0 +1,19 @@
+.mapboxgl-popup {
+  width: auto !important;
+}
+
+.mapboxgl-popup-content {
+  border-radius: 10px;
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+
+.popup-title {
+  font-size: 12px !important;
+  font-weight: bold !important;
+  color: black !important;
+}
+
+.popup-subtitle {
+  font-size: 10px !important;
+  color: #555 !important;
+}

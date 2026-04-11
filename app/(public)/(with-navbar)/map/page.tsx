@@ -4,17 +4,11 @@ import { getUserLocation } from "@/lib/utils";
 import { MapPin } from "lucide-react";
 import { useEffect, useState } from "react";
 import EventCard, { type EventCardProps } from "./_components/EventCard";
+import { type Event } from "@/models/event";
 import Map from "./_components/MapView";
+import { type Pin } from "@/models/pins";
 
-const exampleMarkers = [
-  {
-    lng: 88.611,
-    lat: 27.325,
-    pinId: "pin1",
-  },
-];
-
-const pins: EventCardProps[] = [
+const events: EventCardProps[] = [
   {
     title: "Riverbank Cleanup",
     description: "Plastic and bottles scattered along the riverbank.",
@@ -87,6 +81,94 @@ const pins: EventCardProps[] = [
   },
 ];
 
+const pins: Pin[] = [
+  {
+    pinId: "pin1",
+    reportedBy: "user1",
+    title: "MG Marg Trash Bin Overflow",
+    description: "Overflowing trash bin near the main square.",
+    lat: 27.325,
+    lng: 88.611,
+    geohash: "tsq6g7",
+    city: "Gangtok",
+    state: "Sikkim",
+    status: "REPORTED",
+    severity: "MEDIUM",
+    photoUrls: [],
+    upvotes: 5,
+    createdAt: "2026-04-10T09:00:00Z",
+    cleanedAt: null,
+  },
+  {
+    pinId: "pin2",
+    reportedBy: "user2",
+    title: "Roadside Litter near Taxi Stand",
+    description: "Plastic bottles and wrappers scattered by the taxi stand.",
+    lat: 27.327,
+    lng: 88.613,
+    geohash: "tsq6g8",
+    city: "Gangtok",
+    state: "Sikkim",
+    status: "VERIFIED",
+    severity: "HIGH",
+    photoUrls: [],
+    upvotes: 8,
+    createdAt: "2026-04-09T14:30:00Z",
+    cleanedAt: null,
+  },
+  {
+    pinId: "pin3",
+    reportedBy: "user3",
+    title: "Park Entrance Debris",
+    description: "Construction debris at the park entrance.",
+    lat: 27.323,
+    lng: 88.609,
+    geohash: "tsq6g6",
+    city: "Gangtok",
+    state: "Sikkim",
+    status: "CLEANUP_SCHEDULED",
+    severity: "CRITICAL",
+    photoUrls: [],
+    upvotes: 12,
+    createdAt: "2026-04-08T11:00:00Z",
+    cleanedAt: null,
+  },
+  {
+    pinId: "pin4",
+    reportedBy: "user4",
+    title: "Temple Steps Waste",
+    description: "Offerings and plastic waste on temple steps.",
+    lat: 27.326,
+    lng: 88.61,
+    geohash: "tsq6g7",
+    city: "Gangtok",
+    state: "Sikkim",
+    status: "REPORTED",
+    severity: "LOW",
+    photoUrls: [],
+    upvotes: 3,
+    createdAt: "2026-04-07T16:00:00Z",
+    cleanedAt: null,
+  },
+  {
+    pinId: "pin5",
+    reportedBy: "user5",
+    title: "Bus Stop Garbage",
+    description: "Garbage bags left at the main bus stop.",
+    lat: 27.324,
+    lng: 88.612,
+    geohash: "tsq6g7",
+    city: "Gangtok",
+    state: "Sikkim",
+    status: "CLEANED",
+    severity: "MEDIUM",
+    photoUrls: [],
+    upvotes: 10,
+    createdAt: "2026-04-06T08:00:00Z",
+    cleanedAt: "2026-04-10T10:00:00Z",
+  },
+];
+
 function MapPage() {
   const [userLocation, setUserLocation] = useState<{
     lng: number;
@@ -96,7 +178,6 @@ function MapPage() {
   useEffect(() => {
     const fetchLocation = async () => {
       const location = await getUserLocation();
-      console.log("🚀 ~ fetchLocation ~ location:", location);
       if (location.success) {
         setUserLocation({
           lng: parseFloat(location.message.split(",")[0].split(":")[1].trim()),
@@ -143,8 +224,8 @@ function MapPage() {
               </span>
             </div>
             <div className="flex flex-col gap-3 flex-1 overflow-auto max-h-145 min-w-0">
-              {pins && pins.length > 0
-                ? pins.map((pin, index) => (
+              {events && events.length > 0
+                ? events.map((pin, index) => (
                     <EventCard
                       key={index}
                       title={pin.title}
@@ -161,7 +242,7 @@ function MapPage() {
         {/* Map View */}
         <div className="col-span-12 md:col-span-8 lg:col-span-9 h-full flex flex-col">
           <div className="w-full h-full flex-1">
-            <Map markers={exampleMarkers} onMarkerClick={onMarkerClick} />
+            <Map markers={pins} onMarkerClick={onMarkerClick} />
           </div>
         </div>
       </div>
