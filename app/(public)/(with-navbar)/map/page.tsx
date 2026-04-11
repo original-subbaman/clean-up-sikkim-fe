@@ -1,9 +1,10 @@
 "use client";
 import { SearchBox } from "@/components/common/SearchBox";
+import { getUserLocation } from "@/lib/utils";
+import { MapPin } from "lucide-react";
+import { useEffect, useState } from "react";
 import EventCard, { type EventCardProps } from "./_components/EventCard";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import Map from "./_components/MapView";
-import { MapPin, PinIcon } from "lucide-react";
 
 const exampleMarkers = [
   {
@@ -17,82 +18,102 @@ const pins: EventCardProps[] = [
   {
     title: "Riverbank Cleanup",
     description: "Plastic and bottles scattered along the riverbank.",
-    image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb",
+    image: undefined,
     reportedAt: "2026-04-09",
     distance: "1.2 km",
   },
   {
     title: "Park Litter",
     description: "Overflowing trash bins in the city park.",
-    image: "https://images.unsplash.com/photo-1464983953574-0892a716854b",
+    image: undefined,
     reportedAt: "2026-04-08",
     distance: "0.8 km",
   },
   {
     title: "Roadside Waste",
     description: "Piles of garbage dumped by the roadside.",
-    image: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429",
+    image: undefined,
     reportedAt: "2026-04-07",
     distance: "2.5 km",
   },
   {
     title: "Market Area Mess",
     description: "Food wrappers and plastic bags near the market.",
-    image: "https://images.unsplash.com/photo-1465101046530-73398c7f28ca",
+    image: undefined,
     reportedAt: "2026-04-06",
     distance: "1.7 km",
   },
   {
     title: "School Grounds",
     description: "Litter found around the school playground.",
-    image: "https://images.unsplash.com/photo-1465101178521-c1a9136a3b99",
+    image: undefined,
     reportedAt: "2026-04-05",
     distance: "3.0 km",
   },
   {
     title: "Bus Stop Trash",
     description: "Garbage bags left at the main bus stop.",
-    image: "https://images.unsplash.com/photo-1519125323398-675f0ddb6308",
+    image: undefined,
     reportedAt: "2026-04-04",
     distance: "0.5 km",
   },
   {
     title: "Hilltop Debris",
     description: "Construction debris found on the hilltop trail.",
-    image: "https://images.unsplash.com/photo-1465101046530-73398c7f28ca",
+    image: undefined,
     reportedAt: "2026-04-03",
     distance: "4.1 km",
   },
   {
     title: "Playground Mess",
     description: "Plastic bottles and wrappers scattered in the playground.",
-    image: "https://images.unsplash.com/photo-1465101178521-c1a9136a3b99",
+    image: undefined,
     reportedAt: "2026-04-02",
     distance: "2.2 km",
   },
   {
     title: "Temple Entrance Waste",
     description: "Offerings and plastic waste near the temple entrance.",
-    image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb",
+    image: undefined,
     reportedAt: "2026-04-01",
     distance: "3.8 km",
   },
   {
     title: "Shopping Complex Litter",
     description: "Litter found in the parking area of the shopping complex.",
-    image: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429",
+    image: undefined,
     reportedAt: "2026-03-31",
     distance: "1.5 km",
   },
 ];
 
 function MapPage() {
+  const [userLocation, setUserLocation] = useState<{
+    lng: number;
+    lat: number;
+  } | null>(null);
+
+  useEffect(() => {
+    const fetchLocation = async () => {
+      const location = await getUserLocation();
+      console.log("🚀 ~ fetchLocation ~ location:", location);
+      if (location.success) {
+        setUserLocation({
+          lng: parseFloat(location.message.split(",")[0].split(":")[1].trim()),
+          lat: parseFloat(location.message.split(",")[1].split(":")[1].trim()),
+        });
+      }
+    };
+    fetchLocation();
+  }, []);
+
   function onMarkerClick(
     pinId: string,
     marker: { lng: number; lat: number; pinId: string },
   ) {
     alert(`Marker clicked: ${pinId} at [${marker.lng}, ${marker.lat}]`);
   }
+
   return (
     <main className="flex-1 flex flex-col ">
       <div className="grid grid-cols-12 flex-1">
@@ -115,7 +136,11 @@ function MapPage() {
             />
             <div className="flex gap-1 items-center text-sm text-neutral-500 my-4">
               <MapPin className="w-4 h-4" />
-              <span>88.611, 27.325</span>
+              <span>
+                {userLocation
+                  ? `${userLocation.lng.toFixed(3)}, ${userLocation.lat.toFixed(3)}`
+                  : "Could not retrieve your location"}
+              </span>
             </div>
             <div className="flex flex-col gap-3 flex-1 overflow-auto max-h-145 min-w-0">
               {pins && pins.length > 0
