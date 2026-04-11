@@ -1,3 +1,6 @@
+import { Trash2Icon } from "lucide-react";
+import Image from "next/image";
+
 export type EventCardProps = {
   title: string;
   description: string;
@@ -21,14 +24,20 @@ function EventCard({
     >
       <div className="flex gap-3 w-full min-w-0">
         <div className="h-8 w-8 md:h-16 md:w-16 rounded-lg overflow-hidden shrink-0">
-          <img
-            alt="Trash site thumbnail"
-            className="h-full w-full object-cover"
-            src={
-              image ||
-              "https://lh3.googleusercontent.com/aida-public/AB6AXuDTrUpq2A3cAtaiA7KYFQuoCwxCJwcGptByZuCSwa_b96jYuokG8fpx26GM-4bc1ypuLvdQQOh5yKYQFs0W-5AMkMw_V42go7qHPWbEYu4RHxKzlhbzHzyDMbiCJYBKNp4d2vTtlS2zxgxJSKqbyWRV_4tUAU2qYqvIN1j-_3bR5NAu1Lax5TFAJJKxoQqmiPvjf6EvwAQ4GMw0ylfLp7vq0cJLGHerqdTb8yszKjw-x8Jkjw-g7ytvOkW81vOg7BT7cOI3d8oe4qs"
-            }
-          />
+          {image ? (
+            <Image
+              alt="Trash site thumbnail"
+              src={image}
+              fill
+              sizes="(max-width: 64px) 100vw, 64px"
+              className="object-cover"
+              priority={false}
+            />
+          ) : (
+            <div className="flex items-center justify-center h-full w-full bg-gray-100 rounded-lg">
+              <Trash2Icon />
+            </div>
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex flex-col gap-1 lg:flex-row justify-between items-start mb-1 flex-wrap min-w-0">
