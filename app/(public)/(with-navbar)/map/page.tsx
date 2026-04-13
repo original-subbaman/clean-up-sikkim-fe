@@ -1,12 +1,12 @@
 "use client";
 import { SearchBox } from "@/components/common/SearchBox";
 import { getUserLocation } from "@/lib/utils";
-import { MapPin } from "lucide-react";
-import { useEffect, useState } from "react";
-import EventCard, { type EventCardProps } from "./_components/EventCard";
-import { type Event } from "@/models/event";
-import Map from "./_components/MapView";
 import { type Pin } from "@/models/pins";
+import { MapPin } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Sheet, SheetRef } from "react-modal-sheet";
+import EventCard, { type EventCardProps } from "./_components/EventCard";
+import Map from "./_components/MapView";
 
 const events: EventCardProps[] = [
   {
@@ -174,6 +174,16 @@ function MapPage() {
     lng: number;
     lat: number;
   } | null>(null);
+  const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(true);
+  useEffect(() => {
+    function handleResize() {
+      setIsBottomSheetOpen(window.innerWidth < 768);
+    }
+    window.addEventListener("resize", handleResize);
+    // Call once to set initial state if needed
+    handleResize();
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     const fetchLocation = async () => {
@@ -208,46 +218,105 @@ function MapPage() {
               Explore spots you can help clean up.
             </p>
           </div>
-          <div>
-            <SearchBox
-              label="Search by location"
-              className="h-10" // container height
-              inputClassName="h-10 text-lg" // input height and font size
-              iconClassName="top-2.5 h-5 w-5"
-            />
-            <div className="flex gap-1 items-center text-sm text-neutral-500 my-4">
-              <MapPin className="w-4 h-4" />
-              <span>
-                {userLocation
-                  ? `${userLocation.lng.toFixed(3)}, ${userLocation.lat.toFixed(3)}`
-                  : "Could not retrieve your location"}
-              </span>
-            </div>
-            <div className="flex flex-col gap-3 flex-1 overflow-auto max-h-145 min-w-0">
-              {events && events.length > 0
-                ? events.map((pin, index) => (
-                    <EventCard
-                      key={index}
-                      title={pin.title}
-                      description={pin.description}
-                      image={pin.image}
-                      reportedAt={pin.reportedAt}
-                      distance={pin.distance}
-                    />
-                  ))
-                : null}
-            </div>
-          </div>
+          <SearchAndEventList userLocation={userLocation} events={events} />
         </div>
         {/* Map View */}
-        <div className="col-span-12 md:col-span-8 lg:col-span-9 h-full flex flex-col">
+        <div className="col-span-12 md:col-span-8 lg:col-span-9 h-full flex flex-col z-1">
           <div className="w-full h-full flex-1">
             <Map markers={pins} onMarkerClick={onMarkerClick} />
           </div>
         </div>
+
+        {/* Bottom Sheet */}
+        <BottomSheet isOpen={isBottomSheetOpen}>
+          <SearchAndEventList userLocation={userLocation} events={events} />
+        </BottomSheet>
       </div>
     </main>
   );
+}
+
+function BottomSheet({
+  isOpen,
+  children,
+}: {
+  isOpen: boolean;
+  children: React.ReactNode;
+}) {
+  const snapPoints = [0, 0.2, 0.5, 0.7, 1]; // Example snap points (25%, 50%, 75% of the screen height)
+  const sheetRef = useRef<SheetRef>(null);
+  const borderRadius = 20;
+  return (
+    <Sheet
+      ref={sheetRef}
+      isOpen={isOpen}
+      onClose={() => sheetRef.current?.snapTo(1)}
+      initialSnap={1}
+      snapPoints={snapPoints}
+    >
+      <Sheet.Container
+        style={{
+          borderTopLeftRadius: borderRadius,
+          borderTopRightRadius: borderRadius,
+        }}
+      >
+        <Sheet.Header
+          style={{
+            borderTopLeftRadius: borderRadius,
+            borderTopRightRadius: borderRadius,
+            height: "10px",
+            marginBottom: "20px",
+          }}
+        />
+        <Sheet.Content>{children}</Sheet.Content>
+      </Sheet.Container>
+    </Sheet>
+  );
+}
+
+function SearchAndEventList({
+  userLocation,
+  events,
+}: {
+  userLocation: { lng: number; lat: number } | null;
+  events: EventCardProps[];
+}) {
+  return (
+    <div className="p-2">
+      <SearchBox
+        label="Search by location"
+        className="h-8 md:h-10" // container height
+        inputClassName="h-8 md:h-10 text-sm md:text-lg" // input height and font size
+        iconClassName="top-1.5 md:top-2.5 h-5 w-5"
+      />
+      <div className="flex gap-1 items-center text-sm text-neutral-500 my-4">
+        <MapPin className="w-4 h-4" />
+        <span>
+          {userLocation
+            ? `${userLocation.lng.toFixed(3)}, ${userLocation.lat.toFixed(3)}`
+            : "Could not retrieve your location"}
+        </span>
+      </div>
+      <div className="flex flex-col gap-3 flex-1 overflow-auto max-h-145 min-w-0">
+        {events && events.length > 0
+          ? events.map((pin, index) => (
+              <EventCard
+                key={index}
+                title={pin.title}
+                description={pin.description}
+                image={pin.image}
+                reportedAt={pin.reportedAt}
+                distance={pin.distance}
+              />
+            ))
+          : null}
+      </div>
+    </div>
+  );
+}
+
+function SidePanel() {
+  return;
 }
 
 export default MapPage;
