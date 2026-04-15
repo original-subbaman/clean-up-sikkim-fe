@@ -3,8 +3,8 @@ import { SearchBox } from "@/components/common/SearchBox";
 import { getUserLocation } from "@/lib/utils";
 import { type Pin } from "@/models/pins";
 import { MapPin } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import { Sheet, SheetRef } from "react-modal-sheet";
+import { useEffect, useState } from "react";
+import BottomSheet from "./_components/BottomSheet";
 import EventCard, { type EventCardProps } from "./_components/EventCard";
 import Map from "./_components/MapView";
 
@@ -170,17 +170,19 @@ const pins: Pin[] = [
 ];
 
 function MapPage() {
-  const [userLocation, setUserLocation] = useState<{
-    lng: number;
-    lat: number;
-  } | null>(null);
-  const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(true);
+  const [userLocation, setUserLocation] = useState<
+    | {
+        lng: number;
+        lat: number;
+      }
+    | undefined
+  >(undefined);
+  const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
   useEffect(() => {
     function handleResize() {
       setIsBottomSheetOpen(window.innerWidth < 768);
     }
     window.addEventListener("resize", handleResize);
-    // Call once to set initial state if needed
     handleResize();
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -236,49 +238,11 @@ function MapPage() {
   );
 }
 
-function BottomSheet({
-  isOpen,
-  children,
-}: {
-  isOpen: boolean;
-  children: React.ReactNode;
-}) {
-  const snapPoints = [0, 0.2, 0.5, 0.7, 1]; // Example snap points (25%, 50%, 75% of the screen height)
-  const sheetRef = useRef<SheetRef>(null);
-  const borderRadius = 20;
-  return (
-    <Sheet
-      ref={sheetRef}
-      isOpen={isOpen}
-      onClose={() => sheetRef.current?.snapTo(1)}
-      initialSnap={1}
-      snapPoints={snapPoints}
-    >
-      <Sheet.Container
-        style={{
-          borderTopLeftRadius: borderRadius,
-          borderTopRightRadius: borderRadius,
-        }}
-      >
-        <Sheet.Header
-          style={{
-            borderTopLeftRadius: borderRadius,
-            borderTopRightRadius: borderRadius,
-            height: "10px",
-            marginBottom: "20px",
-          }}
-        />
-        <Sheet.Content>{children}</Sheet.Content>
-      </Sheet.Container>
-    </Sheet>
-  );
-}
-
 function SearchAndEventList({
   userLocation,
   events,
 }: {
-  userLocation: { lng: number; lat: number } | null;
+  userLocation: { lng: number; lat: number } | undefined;
   events: EventCardProps[];
 }) {
   return (
@@ -313,10 +277,6 @@ function SearchAndEventList({
       </div>
     </div>
   );
-}
-
-function SidePanel() {
-  return;
 }
 
 export default MapPage;
