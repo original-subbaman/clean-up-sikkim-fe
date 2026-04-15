@@ -1,8 +1,10 @@
 "use client";
+import { FAB } from "@/components/common/FAB";
 import { SearchBox } from "@/components/common/SearchBox";
 import { getUserLocation } from "@/lib/utils";
 import { type Pin } from "@/models/pins";
 import { MapPin } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import BottomSheet from "./_components/BottomSheet";
 import EventCard, { type EventCardProps } from "./_components/EventCard";
@@ -177,7 +179,11 @@ function MapPage() {
       }
     | undefined
   >(undefined);
+
+  const router = useRouter();
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
+  const isAuthenticated = false; // Replace with actual authentication logic later
+
   useEffect(() => {
     function handleResize() {
       setIsBottomSheetOpen(window.innerWidth < 768);
@@ -207,6 +213,15 @@ function MapPage() {
     alert(`Marker clicked: ${pinId} at [${marker.lng}, ${marker.lat}]`);
   }
 
+  function handleFABClick() {
+    // if not authenticate
+    if (isAuthenticated) {
+      // navigate to add pin page
+    } else {
+      router.push("/login");
+    }
+  }
+
   return (
     <main className="flex-1 flex flex-col ">
       <div className="grid grid-cols-12 flex-1">
@@ -228,7 +243,7 @@ function MapPage() {
             <Map markers={pins} onMarkerClick={onMarkerClick} />
           </div>
         </div>
-
+        <FAB onClick={handleFABClick} position="right" />
         {/* Bottom Sheet */}
         <BottomSheet isOpen={isBottomSheetOpen}>
           <SearchAndEventList userLocation={userLocation} events={events} />
