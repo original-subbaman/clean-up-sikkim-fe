@@ -9,9 +9,10 @@ function BottomSheet({
   isOpen: boolean;
   children: React.ReactNode;
 }) {
-  const snapPoints = [0, 0.2, 0.5, 0.7, 1]; // Example snap points (25%, 50%, 75% of the screen height)
+  const snapPoints = [0, 0.2, 0.5, 0.75, 1]; // Example snap points (25%, 50%, 75% of the screen height)
   const sheetRef = useRef<SheetRef>(null);
   const borderRadius = 20;
+
   return (
     <Sheet
       ref={sheetRef}
@@ -25,6 +26,7 @@ function BottomSheet({
         style={{
           borderTopLeftRadius: borderRadius,
           borderTopRightRadius: borderRadius,
+          maxHeight: "85vh",
         }}
       >
         <Sheet.Header
