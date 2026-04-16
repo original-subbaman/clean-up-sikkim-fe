@@ -20,6 +20,30 @@ const config = {
       fontFamily: {
         sans: ['"Plus Jakarta Sans"', ...defaultTheme.fontFamily.sans],
       },
+      keyframes: {
+        "fade-in": {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+        "fade-out": {
+          "0%": { opacity: "1" },
+          "100%": { opacity: "0" },
+        },
+        "slide-in": {
+          "0%": { transform: "translateY(32px)", opacity: "0" },
+          "100%": { transform: "translateY(0)", opacity: "1" },
+        },
+        "slide-out": {
+          "0%": { transform: "translateY(0)", opacity: "1" },
+          "100%": { transform: "translateY(32px)", opacity: "0" },
+        },
+      },
+      animation: {
+        "fade-in": "fade-in 200ms ease-out",
+        "fade-out": "fade-out 150ms ease-in forwards",
+        "slide-in": "slide-in 300ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "slide-out": "slide-out 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards",
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

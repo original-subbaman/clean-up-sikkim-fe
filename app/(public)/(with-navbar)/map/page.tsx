@@ -1,6 +1,8 @@
 "use client";
 import { FAB } from "@/components/common/FAB";
+import FullScreenDialog from "@/components/common/FullScreenDialog";
 import { SearchBox } from "@/components/common/SearchBox";
+import AddPinForm from "@/components/forms/AddPinForm";
 import { getUserLocation } from "@/lib/utils";
 import { type Pin } from "@/models/pins";
 import { MapPin } from "lucide-react";
@@ -182,7 +184,8 @@ function MapPage() {
 
   const router = useRouter();
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
-  const isAuthenticated = false; // Replace with actual authentication logic later
+  const [openAddPinModal, setOpenAddPinModal] = useState(false);
+  const isAuthenticated = true; // Replace with actual authentication logic later
 
   useEffect(() => {
     function handleResize() {
@@ -216,7 +219,7 @@ function MapPage() {
   function handleFABClick() {
     // if not authenticate
     if (isAuthenticated) {
-      // navigate to add pin page
+      setOpenAddPinModal(true);
     } else {
       router.push("/login");
     }
@@ -224,6 +227,15 @@ function MapPage() {
 
   return (
     <main className="flex-1 flex flex-col ">
+      <FullScreenDialog
+        title="Add New Pin"
+        open={openAddPinModal}
+        onOpenChange={setOpenAddPinModal}
+        showCloseButton
+      >
+        <AddPinForm onSubmit={() => {}} />
+        {/* Add Pin Form or Content */}
+      </FullScreenDialog>
       <div className="grid grid-cols-12 flex-1">
         {/* Side Panel */}
         <div className="hidden md:col-span-4 lg:col-span-3 px-3 md:flex flex-col gap-3">
