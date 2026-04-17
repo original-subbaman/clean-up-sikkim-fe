@@ -233,7 +233,11 @@ function MapPage() {
         onOpenChange={setOpenAddPinModal}
         showCloseButton
       >
-        <AddPinForm onSubmit={() => {}} />
+        <AddPinForm
+          onSubmit={(data) => {
+            console.log("data", data);
+          }}
+        />
         {/* Add Pin Form or Content */}
       </FullScreenDialog>
       <div className="grid grid-cols-12 flex-1">
