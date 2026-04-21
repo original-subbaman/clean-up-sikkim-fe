@@ -10,7 +10,7 @@ export type Pin = {
   state: string;
   status: "REPORTED" | "VERIFIED" | "CLEANUP_SCHEDULED" | "CLEANED";
   severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
-  photoUrls: string[]; // S3 URLs
+  photoUrls?: string[]; // S3 URLs
   upvotes: number;
   createdAt: string; // ISO 8601
   cleanedAt: string | null; // ISO 8601, nullable

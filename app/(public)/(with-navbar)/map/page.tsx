@@ -14,6 +14,7 @@ import Map from "./_components/MapView";
 
 const events: EventCardProps[] = [
   {
+    eventId: "event1",
     title: "Riverbank Cleanup",
     description: "Plastic and bottles scattered along the riverbank.",
     image: undefined,
@@ -21,6 +22,7 @@ const events: EventCardProps[] = [
     distance: "1.2 km",
   },
   {
+    eventId: "event2",
     title: "Park Litter",
     description: "Overflowing trash bins in the city park.",
     image: undefined,
@@ -28,6 +30,7 @@ const events: EventCardProps[] = [
     distance: "0.8 km",
   },
   {
+    eventId: "event3",
     title: "Roadside Waste",
     description: "Piles of garbage dumped by the roadside.",
     image: undefined,
@@ -35,6 +38,7 @@ const events: EventCardProps[] = [
     distance: "2.5 km",
   },
   {
+    eventId: "event4",
     title: "Market Area Mess",
     description: "Food wrappers and plastic bags near the market.",
     image: undefined,
@@ -42,6 +46,7 @@ const events: EventCardProps[] = [
     distance: "1.7 km",
   },
   {
+    eventId: "event5",
     title: "School Grounds",
     description: "Litter found around the school playground.",
     image: undefined,
@@ -49,6 +54,7 @@ const events: EventCardProps[] = [
     distance: "3.0 km",
   },
   {
+    eventId: "event6",
     title: "Bus Stop Trash",
     description: "Garbage bags left at the main bus stop.",
     image: undefined,
@@ -56,6 +62,7 @@ const events: EventCardProps[] = [
     distance: "0.5 km",
   },
   {
+    eventId: "event7",
     title: "Hilltop Debris",
     description: "Construction debris found on the hilltop trail.",
     image: undefined,
@@ -63,6 +70,7 @@ const events: EventCardProps[] = [
     distance: "4.1 km",
   },
   {
+    eventId: "event8",
     title: "Playground Mess",
     description: "Plastic bottles and wrappers scattered in the playground.",
     image: undefined,
@@ -70,6 +78,7 @@ const events: EventCardProps[] = [
     distance: "2.2 km",
   },
   {
+    eventId: "event9",
     title: "Temple Entrance Waste",
     description: "Offerings and plastic waste near the temple entrance.",
     image: undefined,
@@ -77,6 +86,7 @@ const events: EventCardProps[] = [
     distance: "3.8 km",
   },
   {
+    eventId: "event10",
     title: "Shopping Complex Litter",
     description: "Litter found in the parking area of the shopping complex.",
     image: undefined,
@@ -212,9 +222,7 @@ function MapPage() {
   function onMarkerClick(
     pinId: string,
     marker: { lng: number; lat: number; pinId: string },
-  ) {
-    alert(`Marker clicked: ${pinId} at [${marker.lng}, ${marker.lat}]`);
-  }
+  ) {}
 
   function handleFABClick() {
     // if not authenticate
@@ -279,7 +287,7 @@ function SearchAndEventList({
   return (
     <div className="p-2">
       <SearchBox
-        label="Search by location"
+        label="Search by clean up events near you"
         className="h-8 md:h-10" // container height
         inputClassName="h-8 md:h-10 text-sm md:text-lg" // input height and font size
         iconClassName="top-1.5 md:top-2.5 h-5 w-5"
@@ -294,14 +302,16 @@ function SearchAndEventList({
       </div>
       <div className="flex flex-col gap-3 flex-1 overflow-auto max-h-145 min-w-0">
         {events && events.length > 0
-          ? events.map((pin, index) => (
+          ? events.map((event) => (
               <EventCard
-                key={index}
-                title={pin.title}
-                description={pin.description}
-                image={pin.image}
-                reportedAt={pin.reportedAt}
-                distance={pin.distance}
+                key={event.eventId}
+                eventId={event.eventId}
+                title={event.title}
+                description={event.description}
+                image={event.image}
+                reportedAt={event.reportedAt}
+                distance={event.distance}
+                link={`/events/${event.eventId}`} // Replace with actual event link when available
               />
             ))
           : null}
