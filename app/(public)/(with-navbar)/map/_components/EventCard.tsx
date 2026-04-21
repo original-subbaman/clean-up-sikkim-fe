@@ -1,13 +1,15 @@
 import { Trash2Icon } from "lucide-react";
 import Image from "next/image";
-
-export type EventCardProps = {
+import Link from "next/link";
+interface EventCardProps {
+  eventId: string;
   title: string;
   description: string;
   image?: string;
   reportedAt: string;
   distance: string;
-};
+  link?: string;
+}
 
 function EventCard({
   title,
@@ -15,8 +17,9 @@ function EventCard({
   image,
   reportedAt,
   distance,
+  link,
 }: EventCardProps) {
-  return (
+  const card = (
     <div
       className="p-3 bg-surface-container-lowest rounded-2xl w-full min-w-0
     shadow-md hover:shadow-md transition-all cursor-pointer group 
@@ -58,6 +61,13 @@ function EventCard({
       </div>
     </div>
   );
+  return link ? (
+    <Link href={link} className="block w-full min-w-0">
+      {card}
+    </Link>
+  ) : (
+    card
+  );
 }
-
+export type { EventCardProps };
 export default EventCard;
