@@ -52,12 +52,6 @@ function Map({ markers, onMarkerClick }: MapProps) {
         });
       }
 
-      el.addEventListener("click", () => {
-        if (onMarkerClick) {
-          onMarkerClick(pinId, markerData);
-        }
-      });
-
       // add popover
       const popup = new mapboxgl.Popup({
         className: "popup-title popup-subtitle",
@@ -67,8 +61,17 @@ function Map({ markers, onMarkerClick }: MapProps) {
         <p class="popup-title">${title}</p>
         <p class="popup-subtitle">${lat.toFixed(3)}, ${lng.toFixed(3)}</p>
       </div>`);
+
       el.addEventListener("mouseenter", () => popup.addTo(mapRef.current!));
       el.addEventListener("mouseleave", () => popup.remove());
+      el.addEventListener("click", () => {
+        if (onMarkerClick) {
+          onMarkerClick(pinId, markerData);
+        }
+        console.log(`Marker clicked: ${pinId} at [${lng}, ${lat}]`);
+        // Show popup on click
+        popup.addTo(mapRef.current!);
+      });
       marker.setPopup(popup);
     });
 
