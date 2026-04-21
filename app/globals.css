@@ -112,3 +112,31 @@
     color: hsl(var(--foreground));
   }
 }
+
+@layer utilities {
+  /* Custom container and status colors */
+  .bg-primary-container {
+    background-color: hsl(var(--primary) / 0.15) !important;
+  }
+  .text-on-primary-container {
+    color: hsl(var(--primary));
+  }
+  .bg-secondary-container {
+    background-color: hsl(var(--secondary) / 0.15) !important;
+  }
+  .text-on-secondary-container {
+    color: hsl(var(--secondary));
+  }
+  .bg-success-container {
+    background-color: #d1fae5 !important;
+  }
+  .text-on-success-container {
+    color: #065f46;
+  }
+  .bg-error-container {
+    background-color: #fee2e2 !important;
+  }
+  .text-on-error-container {
+    color: #991b1b;
+  }
+}
