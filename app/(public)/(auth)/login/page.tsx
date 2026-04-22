@@ -6,10 +6,12 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { LoginSchema, loginSchema } from "@/lib/schemas/auth-schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Controller, useForm } from "react-hook-form";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Controller, useForm } from "react-hook-form";
 
 function Page() {
+  const router = useRouter();
   const form = useForm<LoginSchema>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -44,7 +46,7 @@ function Page() {
           </div>
           <form
             className="space-y-6"
-            onSubmit={form.handleSubmit((data) => console.log(data))}
+            onSubmit={form.handleSubmit((data) => router.push("/verify-otp"))}
           >
             <div>
               <Controller
