@@ -219,12 +219,12 @@ function CallToActionSection() {
             daily ritual.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <a
+            <Link
               href="/login"
               className="bg-primary text-on-primary px-10 py-5 rounded-2xl font-bold editorial-shadow hover:scale-105 transition-transform"
             >
               Join The Movement
-            </a>
+            </Link>
           </div>
         </div>
       </div>
@@ -251,28 +251,28 @@ function FooterSection() {
             </h4>
             <ul className="space-y-2">
               <li>
-                <a
+                <Link
                   className="text-zinc-500 dark:text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-300 font-['Be_Vietnam_Pro'] text-sm hover:translate-x-1 transition-transform inline-block"
                   href="#"
                 >
                   Map Explorer
-                </a>
+                </Link>
               </li>
               <li>
-                <a
+                <Link
                   className="text-zinc-500 dark:text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-300 font-['Be_Vietnam_Pro'] text-sm hover:translate-x-1 transition-transform inline-block"
                   href="#"
                 >
                   Reward Shop
-                </a>
+                </Link>
               </li>
               <li>
-                <a
+                <Link
                   className="text-emerald-700 dark:text-emerald-300 underline font-['Be_Vietnam_Pro'] text-sm"
                   href="#"
                 >
                   Impact Report
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -282,28 +282,28 @@ function FooterSection() {
             </h4>
             <ul className="space-y-2">
               <li>
-                <a
+                <Link
                   className="text-zinc-500 dark:text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-300 font-['Be_Vietnam_Pro'] text-sm hover:translate-x-1 transition-transform inline-block"
                   href="#"
                 >
                   Privacy Policy
-                </a>
+                </Link>
               </li>
               <li>
-                <a
+                <Link
                   className="text-zinc-500 dark:text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-300 font-['Be_Vietnam_Pro'] text-sm hover:translate-x-1 transition-transform inline-block"
                   href="#"
                 >
                   Terms of Service
-                </a>
+                </Link>
               </li>
               <li>
-                <a
+                <Link
                   className="text-zinc-500 dark:text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-300 font-['Be_Vietnam_Pro'] text-sm hover:translate-x-1 transition-transform inline-block"
                   href="#"
                 >
                   Contact Us
-                </a>
+                </Link>
               </li>
             </ul>
           </div>

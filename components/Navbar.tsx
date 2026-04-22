@@ -6,6 +6,7 @@ import {
   PopoverTrigger,
 } from "@radix-ui/react-popover";
 import { Bell, Menu, X } from "lucide-react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
@@ -35,9 +36,9 @@ function NavLink({
   }
 
   return (
-    <a href={href} className={`${baseClass} transition-all duration-500`}>
+    <Link href={href} className={`${baseClass} transition-all duration-500`}>
       {children}
-    </a>
+    </Link>
   );
 }
 
@@ -161,7 +162,7 @@ export default function Navbar({ routes }: { routes: readonly NavLinkItem[] }) {
         {/* Drawer nav links */}
         <div className="flex flex-col gap-1 px-4 py-4 flex-1">
           {routes.map((route) => (
-            <a
+            <Link
               key={route.path}
               href={route.path}
               onClick={closeDrawer}
@@ -172,7 +173,7 @@ export default function Navbar({ routes }: { routes: readonly NavLinkItem[] }) {
               }`}
             >
               {route.label}
-            </a>
+            </Link>
           ))}
         </div>
 
@@ -195,20 +196,20 @@ export default function Navbar({ routes }: { routes: readonly NavLinkItem[] }) {
             </div>
           ) : (
             <>
-              <a
+              <Link
                 href="/login"
                 onClick={closeDrawer}
                 className="w-full text-center py-2.5 rounded-lg font-semibold text-neutral-600 border border-neutral-200 hover:border-primary hover:text-primary transition-colors duration-200"
               >
                 Login
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/signup"
                 onClick={closeDrawer}
                 className="w-full text-center py-2.5 rounded-lg font-semibold bg-primary text-white hover:bg-primary/90 transition-colors duration-200"
               >
                 Join Movement
-              </a>
+              </Link>
             </>
           )}
         </div>

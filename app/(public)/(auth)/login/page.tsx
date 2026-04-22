@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { LoginSchema, loginSchema } from "@/lib/schemas/auth-schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
+import Link from "next/link";
 
 function Page() {
   const form = useForm<LoginSchema>({
@@ -80,12 +81,12 @@ function Page() {
                 hint=""
               />
               <div className="flex justify-between items-center my-4 ml-1">
-                <a
+                <Link
                   className="text-xs font-medium text-tertiary hover:underline"
-                  href="#"
+                  href="/forgot-password"
                 >
                   Forgot password?
-                </a>
+                </Link>
               </div>
             </div>
             <Button type="submit" size="lg" className="w-full">
@@ -95,12 +96,12 @@ function Page() {
           <div className="mt-8 pt-8 border-t border-outline-variant/20 text-center">
             <p className="text-sm text-on-surface-variant">
               Don't have an account?
-              <a
+              <Link
                 className="text-primary font-bold hover:underline ml-1"
                 href="/signup"
               >
                 Sign up
-              </a>
+              </Link>
             </p>
           </div>
         </div>

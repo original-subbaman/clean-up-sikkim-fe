@@ -9,6 +9,7 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { useState } from "react";
 import { PasswordTextField } from "@/components/auth/PasswordTextField";
 import LoginWithGoogle from "@/components/auth/LoginWithGoogle";
+import Link from "next/link";
 
 function Page() {
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -123,12 +124,12 @@ function Page() {
         <div className="mt-8 pt-8 text-center border-t border-outline-variant/20">
           <p className="text-on-surface-variant text-sm">
             Already have an account?
-            <a
+            <Link
               className="text-primary font-bold ml-1 hover:underline transition-all"
               href="/login"
             >
               Sign in
-            </a>
+            </Link>
           </p>
         </div>
       </div>
