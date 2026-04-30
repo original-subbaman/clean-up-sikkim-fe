@@ -5,7 +5,7 @@ import { confirmSignUp, resendSignUpCode } from "aws-amplify/auth";
 import { ArrowLeft, ArrowRight, Leaf } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 
 type VerifyOtpForm = {
@@ -15,9 +15,11 @@ type VerifyOtpForm = {
 function VerifyOTPPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const email = searchParams.get("email") ?? "";
+  const emailFromUrl = searchParams.get("email") ?? "";
+  const [email, setEmail] = useState(emailFromUrl);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [resendError, setResendError] = useState<string | null>(null);
+  const [isResending, setIsResending] = useState(false);
   const {
     handleSubmit,
     control,
@@ -26,6 +28,16 @@ function VerifyOTPPage() {
   } = useForm<VerifyOtpForm>({
     defaultValues: { otp: Array(6).fill("") },
   });
+
+  useEffect(() => {
+    if (emailFromUrl) {
+      sessionStorage.setItem("pendingSignupEmail", emailFromUrl);
+      setEmail(emailFromUrl);
+      return;
+    }
+
+    setEmail(sessionStorage.getItem("pendingSignupEmail") ?? "");
+  }, [emailFromUrl]);
 
   async function onSubmit(data: VerifyOtpForm) {
     if (!email) {
@@ -43,6 +55,7 @@ function VerifyOTPPage() {
         confirmationCode,
       });
 
+      sessionStorage.removeItem("pendingSignupEmail");
       router.push(`/login?email=${encodeURIComponent(email)}`);
     } catch (error) {
       setError("root", {
@@ -61,10 +74,13 @@ function VerifyOTPPage() {
     }
 
     try {
+      setIsResending(true);
       await resendSignUpCode({ username: email });
       setStatusMessage("A new verification code has been sent.");
     } catch (error) {
       setResendError(getVerifyOtpErrorMessage(error));
+    } finally {
+      setIsResending(false);
     }
   }
 
@@ -152,9 +168,10 @@ function VerifyOTPPage() {
               <button
                 className="text-tertiary font-semibold text-sm hover:underline underline-offset-4 decoration-2"
                 type="button"
+                disabled={isResending}
                 onClick={handleResendCode}
               >
-                Resend Code
+                {isResending ? "Sending..." : "Resend Code"}
               </button>
             </div>
           </div>

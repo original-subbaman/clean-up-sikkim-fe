@@ -1,5 +1,4 @@
 "use client";
-import LoginWithGoogle from "@/components/auth/LoginWithGoogle";
 import { PasswordTextField } from "@/components/auth/PasswordTextField";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
@@ -35,9 +34,12 @@ function Page() {
         },
       });
 
+      sessionStorage.setItem("pendingSignupEmail", data.email);
       router.push(`/verify-otp?email=${encodeURIComponent(data.email)}`);
     } catch (error) {
-      console.log("🚀 ~ handleSignUp ~ error:", error);
+      form.setError("root", {
+        message: getSignUpErrorMessage(error),
+      });
     }
   }
 
@@ -51,20 +53,7 @@ function Page() {
           Join to keep Sikkim clean and green.
         </p>
       </div>
-      {/* Sign Up Card*/}
-      <div className="w-full bg-surface-container-lowest rounded-xl p-8  editorial-shadow border border-outline-variant/10">
-        {/* Social Sign Up */}
-        <div className="space-y-2 mb-8">
-          <LoginWithGoogle label="Sign Up With Google" onClick={() => {}} />
-        </div>
-        <div className="relative mb-8 flex items-center">
-          <div className="grow border-t border-outline-variant opacity-30"></div>
-          <span className="px-4 text-xs font-label uppercase tracking-widest text-outline">
-            Or use email
-          </span>
-          <div className="grow border-t border-outline-variant opacity-30"></div>
-        </div>
-        {/* form */}
+      <div className="w-full bg-surface-container-lowest rounded-xl p-8 editorial-shadow border border-outline-variant/10">
         <form className="space-y-6" onSubmit={form.handleSubmit(handleSignUp)}>
           <div>
             <Controller
@@ -126,13 +115,22 @@ function Page() {
             <PasswordTextField name="password" control={form.control} />
           </div>
           <div className="pt-2">
-            <Button type="submit" size="lg" className="w-full p-5">
-              Create Account
+            <Button
+              type="submit"
+              size="lg"
+              className="w-full p-5"
+              disabled={form.formState.isSubmitting}
+            >
+              {form.formState.isSubmitting
+                ? "Creating account..."
+                : "Create Account"}
             </Button>
           </div>
+          {form.formState.errors.root?.message && (
+            <FieldError errors={[form.formState.errors.root]} />
+          )}
         </form>
 
-        {/* Sign In Link */}
         <div className="mt-8 pt-8 text-center border-t border-outline-variant/20">
           <p className="text-on-surface-variant text-sm">
             Already have an account?
@@ -147,6 +145,25 @@ function Page() {
       </div>
     </div>
   );
+}
+
+function getSignUpErrorMessage(error: unknown) {
+  if (!(error instanceof Error)) {
+    return "Unable to create account. Please try again.";
+  }
+
+  switch (error.name) {
+    case "UsernameExistsException":
+      return "An account already exists for this email address.";
+    case "InvalidPasswordException":
+      return "Password does not meet the required policy.";
+    case "InvalidParameterException":
+      return "Please check your signup details and try again.";
+    case "LimitExceededException":
+      return "Too many attempts. Please wait a moment and try again.";
+    default:
+      return error.message || "Unable to create account. Please try again.";
+  }
 }
 
 export default Page;

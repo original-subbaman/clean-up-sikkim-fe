@@ -1,6 +1,5 @@
 "use client";
 import "@/lib/amplify";
-import LoginWithGoogle from "@/components/auth/LoginWithGoogle";
 import { PasswordTextField } from "@/components/auth/PasswordTextField";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { Button } from "@/components/ui/button";
@@ -40,6 +39,7 @@ function Page() {
 
       switch (result.nextStep.signInStep) {
         case "CONFIRM_SIGN_UP":
+          sessionStorage.setItem("pendingSignupEmail", data.email);
           router.push(`/verify-otp?email=${encodeURIComponent(data.email)}`);
           return;
         case "RESET_PASSWORD":
@@ -54,7 +54,6 @@ function Page() {
           });
       }
     } catch (error) {
-      console.log("🚀 ~ handleEmailPasswordSignIn ~ error:", error);
       form.setError("root", {
         message: getSignInErrorMessage(error),
       });
@@ -74,16 +73,6 @@ function Page() {
             <p className="text-on-surface-variant text-sm mt-1">
               Welcome back!
             </p>
-          </div>
-          <div className="space-y-3 mb-8">
-            <LoginWithGoogle label="Continue With Google" onClick={() => {}} />
-          </div>
-          <div className="flex items-center gap-4 mb-8">
-            <div className="grow h-px bg-outline-variant/30"></div>
-            <span className="text-xs font-label uppercase tracking-widest text-outline">
-              or email
-            </span>
-            <div className="grow h-px bg-outline-variant/30"></div>
           </div>
           <form
             className="space-y-6"
@@ -168,11 +157,10 @@ function getSignInErrorMessage(error: unknown) {
 
   switch (error.name) {
     case "NotAuthorizedException":
+    case "UserNotFoundException":
       return "Incorrect email or password.";
     case "UserNotConfirmedException":
       return "Please verify your email before signing in.";
-    case "UserNotFoundException":
-      return "No account exists for this email address.";
     default:
       return error.message || "Unable to sign in. Please try again.";
   }
