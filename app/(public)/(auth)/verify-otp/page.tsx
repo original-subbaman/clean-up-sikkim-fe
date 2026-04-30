@@ -1,21 +1,72 @@
 "use client";
 import OTPInput from "@/components/common/OTPInput";
 import { Button } from "@/components/ui/button";
+import { confirmSignUp, resendSignUpCode } from "aws-amplify/auth";
 import { ArrowLeft, ArrowRight, Leaf } from "lucide-react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 
+type VerifyOtpForm = {
+  otp: string[];
+};
+
 function VerifyOTPPage() {
-  const { handleSubmit, control } = useForm({
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const email = searchParams.get("email") ?? "";
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [resendError, setResendError] = useState<string | null>(null);
+  const {
+    handleSubmit,
+    control,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<VerifyOtpForm>({
     defaultValues: { otp: Array(6).fill("") },
   });
 
-  const onSubmit = (data: any) => {
-    // Combine OTP digits into a string if needed
-    const otp = Array.isArray(data.otp) ? data.otp.join("") : data.otp;
-    // TODO: handle OTP verification
-    alert("OTP submitted: " + otp);
-  };
+  async function onSubmit(data: VerifyOtpForm) {
+    if (!email) {
+      setError("root", {
+        message: "Missing email address. Please start signup again.",
+      });
+      return;
+    }
+
+    try {
+      const confirmationCode = data.otp.join("");
+
+      await confirmSignUp({
+        username: email,
+        confirmationCode,
+      });
+
+      router.push(`/login?email=${encodeURIComponent(email)}`);
+    } catch (error) {
+      setError("root", {
+        message: getVerifyOtpErrorMessage(error),
+      });
+    }
+  }
+
+  async function handleResendCode() {
+    setStatusMessage(null);
+    setResendError(null);
+
+    if (!email) {
+      setResendError("Missing email address. Please start signup again.");
+      return;
+    }
+
+    try {
+      await resendSignUpCode({ username: email });
+      setStatusMessage("A new verification code has been sent.");
+    } catch (error) {
+      setResendError(getVerifyOtpErrorMessage(error));
+    }
+  }
 
   return (
     <div className="w-full max-w-md">
@@ -37,7 +88,7 @@ function VerifyOTPPage() {
             Verify Your Identity
           </h1>
           <p className="text-on-surface-variant text-sm md:text-base leading-relaxed">
-            We've sent a 6-digit code to your email. Enter it below to secure
+            We&apos;ve sent a 6-digit code to your email. Enter it below to secure
             your Clean Up Sikkim account.
           </p>
         </header>
@@ -79,14 +130,29 @@ function VerifyOTPPage() {
               rounded-2xl bg-linear-to-br from-primary to-primary-container text-white font-bold text-base shadow-lg shadow-primary/10 
               hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 group"
               type="submit"
+              disabled={isSubmitting}
             >
-              <span>Verify &amp; Continue</span>
+              <span>{isSubmitting ? "Verifying..." : "Verify & Continue"}</span>
               <ArrowRight className="text-xl group-hover:translate-x-1 transition-transform duration-300" />
             </Button>
+            {errors.root?.message && (
+              <p className="text-destructive text-sm text-center">
+                {errors.root.message}
+              </p>
+            )}
+            {statusMessage && (
+              <p className="text-primary text-sm text-center">{statusMessage}</p>
+            )}
+            {resendError && (
+              <p className="text-destructive text-sm text-center">
+                {resendError}
+              </p>
+            )}
             <div className="text-center">
               <button
                 className="text-tertiary font-semibold text-sm hover:underline underline-offset-4 decoration-2"
                 type="button"
+                onClick={handleResendCode}
               >
                 Resend Code
               </button>
@@ -105,6 +171,25 @@ function VerifyOTPPage() {
       </div>
     </div>
   );
+}
+
+function getVerifyOtpErrorMessage(error: unknown) {
+  if (!(error instanceof Error)) {
+    return "Unable to verify the code. Please try again.";
+  }
+
+  switch (error.name) {
+    case "CodeMismatchException":
+      return "The verification code is incorrect.";
+    case "ExpiredCodeException":
+      return "The verification code has expired. Please request a new one.";
+    case "LimitExceededException":
+      return "Too many attempts. Please wait a moment and try again.";
+    case "UserNotFoundException":
+      return "No account was found for this email address.";
+    default:
+      return error.message || "Unable to verify the code. Please try again.";
+  }
 }
 
 export default VerifyOTPPage;

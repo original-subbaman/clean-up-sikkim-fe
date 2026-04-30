@@ -1,6 +1,8 @@
 "use client";
+import "@/lib/amplify";
 import LoginWithGoogle from "@/components/auth/LoginWithGoogle";
 import { PasswordTextField } from "@/components/auth/PasswordTextField";
+import { useAuth } from "@/components/providers/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -9,9 +11,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
+import { signIn } from "aws-amplify/auth";
 
 function Page() {
   const router = useRouter();
+  const { refreshAuth } = useAuth();
   const form = useForm<LoginSchema>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -19,6 +23,43 @@ function Page() {
       password: "",
     },
   });
+
+  async function handleEmailPasswordSignIn(data: LoginSchema) {
+    try {
+      const result = await signIn({
+        username: data.email,
+        password: data.password,
+      });
+
+      if (result.isSignedIn || result.nextStep.signInStep === "DONE") {
+        await refreshAuth();
+        router.push("/");
+        router.refresh();
+        return;
+      }
+
+      switch (result.nextStep.signInStep) {
+        case "CONFIRM_SIGN_UP":
+          router.push(`/verify-otp?email=${encodeURIComponent(data.email)}`);
+          return;
+        case "RESET_PASSWORD":
+          router.push(
+            `/forgot-password?email=${encodeURIComponent(data.email)}`,
+          );
+          return;
+        default:
+          form.setError("root", {
+            message:
+              "This account needs an additional sign-in step that is not available here yet.",
+          });
+      }
+    } catch (error) {
+      console.log("🚀 ~ handleEmailPasswordSignIn ~ error:", error);
+      form.setError("root", {
+        message: getSignInErrorMessage(error),
+      });
+    }
+  }
 
   return (
     <div className="w-full flex justify-center items-center flex-1">
@@ -46,7 +87,7 @@ function Page() {
           </div>
           <form
             className="space-y-6"
-            onSubmit={form.handleSubmit((data) => router.push("/verify-otp"))}
+            onSubmit={form.handleSubmit(handleEmailPasswordSignIn)}
           >
             <div>
               <Controller
@@ -91,13 +132,21 @@ function Page() {
                 </Link>
               </div>
             </div>
-            <Button type="submit" size="lg" className="w-full">
-              Sign In
+            <Button
+              type="submit"
+              size="lg"
+              className="w-full"
+              disabled={form.formState.isSubmitting}
+            >
+              {form.formState.isSubmitting ? "Signing in..." : "Sign In"}
             </Button>
+            {form.formState.errors.root?.message && (
+              <FieldError errors={[form.formState.errors.root]} />
+            )}
           </form>
           <div className="mt-8 pt-8 border-t border-outline-variant/20 text-center">
             <p className="text-sm text-on-surface-variant">
-              Don't have an account?
+              Don&apos;t have an account?
               <Link
                 className="text-primary font-bold hover:underline ml-1"
                 href="/signup"
@@ -110,6 +159,23 @@ function Page() {
       </div>
     </div>
   );
+}
+
+function getSignInErrorMessage(error: unknown) {
+  if (!(error instanceof Error)) {
+    return "Unable to sign in. Please try again.";
+  }
+
+  switch (error.name) {
+    case "NotAuthorizedException":
+      return "Incorrect email or password.";
+    case "UserNotConfirmedException":
+      return "Please verify your email before signing in.";
+    case "UserNotFoundException":
+      return "No account exists for this email address.";
+    default:
+      return error.message || "Unable to sign in. Please try again.";
+  }
 }
 
 export default Page;

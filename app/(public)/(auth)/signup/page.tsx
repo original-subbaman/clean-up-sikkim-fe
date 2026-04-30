@@ -1,18 +1,18 @@
 "use client";
-import { Eye, EyeClosed } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { SignupSchema, signupSchema } from "@/lib/schemas/auth-schemas";
-import { Controller, useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
-import { useState } from "react";
-import { PasswordTextField } from "@/components/auth/PasswordTextField";
 import LoginWithGoogle from "@/components/auth/LoginWithGoogle";
+import { PasswordTextField } from "@/components/auth/PasswordTextField";
+import { Button } from "@/components/ui/button";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { SignupSchema, signupSchema } from "@/lib/schemas/auth-schemas";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { signUp } from "aws-amplify/auth";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Controller, useForm } from "react-hook-form";
 
 function Page() {
-  const [passwordVisible, setPasswordVisible] = useState(false);
+  const router = useRouter();
   const form = useForm<SignupSchema>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
@@ -22,8 +22,23 @@ function Page() {
     },
   });
 
-  function togglePasswordVisibility() {
-    setPasswordVisible((prev) => !prev);
+  async function handleSignUp(data: SignupSchema) {
+    try {
+      await signUp({
+        username: data.email,
+        password: data.password,
+        options: {
+          userAttributes: {
+            email: data.email,
+            name: data.username,
+          },
+        },
+      });
+
+      router.push(`/verify-otp?email=${encodeURIComponent(data.email)}`);
+    } catch (error) {
+      console.log("🚀 ~ handleSignUp ~ error:", error);
+    }
   }
 
   return (
@@ -50,10 +65,7 @@ function Page() {
           <div className="grow border-t border-outline-variant opacity-30"></div>
         </div>
         {/* form */}
-        <form
-          className="space-y-6"
-          onSubmit={form.handleSubmit((data) => console.log(data))}
-        >
+        <form className="space-y-6" onSubmit={form.handleSubmit(handleSignUp)}>
           <div>
             <Controller
               name="username"

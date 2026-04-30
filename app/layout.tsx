@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Be_Vietnam_Pro, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import AuthProvider from "@/components/providers/AuthProvider";
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ["latin"],
@@ -30,7 +31,9 @@ export default function RootLayout({
       lang="en"
       className={`${plusJakartaSans.variable} ${beVietnamPro.variable} antialiased font-sans`}
     >
-      <body className="flex flex-col min-h-screen w-full ">{children}</body>
+      <body className="flex flex-col min-h-screen w-full ">
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   );
 }
