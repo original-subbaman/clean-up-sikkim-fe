@@ -5,10 +5,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@radix-ui/react-popover";
-import { Bell, Menu, X } from "lucide-react";
+import { Bell, Menu, User, X } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
+import { useAuth } from "./providers/AuthProvider";
+import { Button } from "./ui/button";
 
 type NavLinkProps = {
   href: string;
@@ -44,10 +46,27 @@ function NavLink({
 
 export default function Navbar({ routes }: { routes: readonly NavLinkItem[] }) {
   const pathName = usePathname();
-  const isAuthenticated = false; // Replace with actual authentication logic
+  const router = useRouter();
+  const { user, isLoading, isAuthenticated, signOut } = useAuth();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
+  const visibleRoutes = useMemo(
+    () =>
+      routes.filter((route) => {
+        if (!route.isPrivate) return true;
+
+        return !isLoading && isAuthenticated;
+      }),
+    [isAuthenticated, isLoading, routes],
+  );
+
   const closeDrawer = () => setDrawerOpen(false);
+
+  const handleSignOut = async () => {
+    await signOut();
+    closeDrawer();
+    router.replace("/map");
+  };
 
   return (
     <>
@@ -61,11 +80,13 @@ export default function Navbar({ routes }: { routes: readonly NavLinkItem[] }) {
           >
             <Menu className="w-6 h-6" />
           </button>
-          <p className="font-bold text-lg text-primary mr-10">
-            Clean Up Sikkim
-          </p>
+          <Link href="/">
+            <p className="font-bold text-lg text-primary mr-10">
+              Clean Up Sikkim
+            </p>
+          </Link>
           <div className="hidden md:flex space-x-4">
-            {routes.map((route) => (
+            {visibleRoutes.map((route) => (
               <NavLink
                 key={route.path}
                 href={route.path}
@@ -77,7 +98,7 @@ export default function Navbar({ routes }: { routes: readonly NavLinkItem[] }) {
           </div>
           {/* Profile */}
           {isAuthenticated ? (
-            <div className="hidden md:flex space-x-4  items-center justify-center">
+            <div className="hidden md:flex gap-4  items-center justify-center">
               <NavLink
                 href="/notifications"
                 isActive={pathName === "/notifications"}
@@ -88,29 +109,25 @@ export default function Navbar({ routes }: { routes: readonly NavLinkItem[] }) {
                 <PopoverTrigger asChild>
                   <button
                     className="focus:outline-none rounded-full border-2 
-              border-primary w-8 h-8 overflow-hidden"
+                    border-primary w-8 h-8 overflow-hidden"
                   >
-                    <img
-                      src="/globe.svg"
-                      alt="User profile"
-                      className="w-full h-full object-cover"
-                    />
+                    <User className="w-full h-full text-primary" />
                   </button>
                 </PopoverTrigger>
-                <PopoverContent className="w-56">
+                <PopoverContent
+                  align="end"
+                  sideOffset={10}
+                  className="w-56 bg-white shadow-2xl rounded-md"
+                >
                   <div className="flex flex-col items-center p-2">
-                    <img
-                      src="/globe.svg"
-                      alt="User profile"
-                      className="w-16 h-16 rounded-full mb-2 border-2 border-primary"
-                    />
-                    <p className="font-semibold">John Doe</p>
+                    <User className="w-10 h-10 rounded-full mb-2 border-2 border-primary text-primary" />
+                    <p className="font-semibold">{user?.name || "User"}</p>
                     <p className="text-xs text-gray-500 mb-2">
-                      john@example.com
+                      {user?.email || "No email"}
                     </p>
-                    <button className="mt-2 px-4 py-1 bg-primary text-white rounded hover:bg-primary/90">
+                    <Button variant="destructive" onClick={handleSignOut}>
                       Logout
-                    </button>
+                    </Button>
                   </div>
                 </PopoverContent>
               </Popover>
@@ -161,7 +178,7 @@ export default function Navbar({ routes }: { routes: readonly NavLinkItem[] }) {
 
         {/* Drawer nav links */}
         <div className="flex flex-col gap-1 px-4 py-4 flex-1">
-          {routes.map((route) => (
+          {visibleRoutes.map((route) => (
             <Link
               key={route.path}
               href={route.path}
@@ -181,16 +198,19 @@ export default function Navbar({ routes }: { routes: readonly NavLinkItem[] }) {
         <div className="px-4 py-5 border-t border-neutral-100 flex flex-col gap-3">
           {isAuthenticated ? (
             <div className="flex items-center gap-3">
-              <img
-                src="/globe.svg"
-                alt="User profile"
-                className="w-10 h-10 rounded-full border-2 border-primary"
-              />
+              <User className="w-10 h-10 rounded-full border-2 border-primary text-primary" />
               <div className="flex-1">
-                <p className="font-semibold text-sm">John Doe</p>
-                <p className="text-xs text-gray-500">john@example.com</p>
+                <p className="font-semibold text-sm">{user?.name || "User"}</p>
+                <p className="text-xs text-gray-500">
+                  {user?.email || "No email"}
+                </p>
               </div>
-              <button className="text-xs px-3 py-1.5 bg-primary text-white rounded-lg hover:bg-primary/90">
+              <button
+                onClick={() => {
+                  void handleSignOut();
+                }}
+                className="text-xs px-3 py-1.5 bg-primary text-white rounded-lg hover:bg-primary/90"
+              >
                 Logout
               </button>
             </div>
