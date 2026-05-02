@@ -61,7 +61,7 @@ function LocationCard({
       <div className="relative h-48 w-full rounded-[1.8rem] overflow-hidden  bg-surface-container">
         <img
           className="w-full h-full object-cover"
-          data-alt={imageAlt}
+          alt={imageAlt}
           src={imageSrc}
         />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
@@ -99,7 +99,7 @@ function EventDetailsPage() {
             <div className="flex items-center gap-4">
               <img
                 className="w-12 h-12 rounded-full object-cover border-2 border-surface-container-highest"
-                data-alt="headshot of Rajesh Kumar a smiling Indian man in casual attire outdoors"
+                alt="headshot of Rajesh Kumar a smiling Indian man in casual attire outdoors"
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjvKyZxNXH0E_uKIjhampCIglJaE2EtmIbxruCbUqMkloQYQ7eBHUhThU4ymxfIqgXr-JEOSKQOUEGyvx5hsWMS1FkOIlu6XbSQ-5KXPle3sISWJNTrjcE3vIUvtagi4pXdJ4XoM09p0tptsfgZY-g_3yTSn5Xu6zELq0cdA8RPbs5cmQj8qskhCjiTJ2JmEDmcR4VsSs5TTfKnyxSMZkB3XrJpha539Lh6HqEGjp0qD-QemNU89RfWe12G2Gu6CpMsibspvgwxr0"
               />
               <div>
@@ -134,7 +134,7 @@ function EventDetailsPage() {
             <div className="aspect-4/3 rounded-2xl overflow-hidden group relative max-h-80 w-full">
               <img
                 className="w-full object-contain transition-transform duration-500 group-hover:scale-110"
-                data-alt="heaps of plastic waste washed up on a rocky beach shoreline"
+                alt="heaps of plastic waste washed up on a rocky beach shoreline"
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuDaBP6mt9xUJm-3KuElPY4J_RCfoMK32rGvsdJaQV37rhcfDORa2GHIKUI_6wSFYeAMaOxGahCxFMNKLkryj5EuDwKXJbM_V3upAfYBS7Sv5OfP4w3X9Zw9SJwFm5nuy7Wig5AITb9O7j79kCChBD6hQW2jZQp2cm8hyZ06vkUbv8NObwLBFjB_aGuV_OJ2h0cGnpGdX0-oF8fJnLXV_nFaD6tfpWwnx7JqRVK4Vf3Y5T9sjASUlabz8wXSwIF3fym_HQC0x_19Vvs"
               />
               <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors"></div>
@@ -152,7 +152,7 @@ function EventDetailsPage() {
               Join us for our monthly beach cleanup at Cuffe Parade. We will be
               collecting plastic waste and segregating it for recycling. Gloves
               and bags will be provided. This initiative aims to restore the
-              natural beauty of Mumbai's coastline while fostering a community
+              natural beauty of Mumbai&apos;s coastline while fostering a community
               of responsible citizens.
             </p>
           </section>
