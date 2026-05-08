@@ -17,6 +17,8 @@ function Page() {
     defaultValues: {
       username: "",
       email: "",
+      state: "",
+      city: "",
       password: "",
     },
   });
@@ -30,6 +32,8 @@ function Page() {
           userAttributes: {
             email: data.email,
             name: data.username,
+            "custom:state": data.state,
+            "custom:city": data.city,
           },
         },
       });
@@ -102,6 +106,62 @@ function Page() {
                     aria-invalid={fieldState.invalid}
                     placeholder="hello@example.com"
                     type="email"
+                    className="w-full bg-surface-container-low border-none focus:ring-2 focus:ring-primary/20 rounded-xl px-5 py-4 text-on-surface placeholder:text-outline transition-all duration-200"
+                  />
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
+          </div>
+          <div>
+            <Controller
+              name="state"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field>
+                  <FieldLabel
+                    htmlFor="state"
+                    className="block text-sm font-label font-bold text-on-surface-variant mb-2 ml-1"
+                  >
+                    State
+                  </FieldLabel>
+                  <Input
+                    {...field}
+                    id="state"
+                    name="state"
+                    aria-invalid={fieldState.invalid}
+                    placeholder="Sikkim"
+                    type="text"
+                    className="w-full bg-surface-container-low border-none focus:ring-2 focus:ring-primary/20 rounded-xl px-5 py-4 text-on-surface placeholder:text-outline transition-all duration-200"
+                  />
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
+          </div>
+          <div>
+            <Controller
+              name="city"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field>
+                  <FieldLabel
+                    htmlFor="city"
+                    className="block text-sm font-label font-bold text-on-surface-variant mb-2 ml-1"
+                  >
+                    City
+                  </FieldLabel>
+                  <Input
+                    {...field}
+                    id="city"
+                    name="city"
+                    aria-invalid={fieldState.invalid}
+                    placeholder="Gangtok"
+                    type="text"
                     className="w-full bg-surface-container-low border-none focus:ring-2 focus:ring-primary/20 rounded-xl px-5 py-4 text-on-surface placeholder:text-outline transition-all duration-200"
                   />
                   {fieldState.invalid && (
