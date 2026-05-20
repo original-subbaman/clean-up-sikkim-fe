@@ -11,10 +11,10 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 
-type AddPinFormInputs = {
+export type AddPinFormInputs = {
   title: string;
   description: string;
-  location: string;
+  city: string;
   lat: string;
   lng: string;
   severity: "low" | "medium" | "high" | "critical";
@@ -22,7 +22,7 @@ type AddPinFormInputs = {
 };
 
 interface AddPinFormProps {
-  onSubmit: (data: AddPinFormInputs) => void;
+  onSubmit: (data: AddPinFormInputs) => Promise<void> | void;
   defaultValues?: Partial<AddPinFormInputs>;
 }
 
@@ -36,8 +36,8 @@ const AddPinForm: React.FC<AddPinFormProps> = ({ onSubmit, defaultValues }) => {
     defaultValues,
   });
 
-  const submitHandler: SubmitHandler<AddPinFormInputs> = (data) => {
-    onSubmit(data);
+  const submitHandler: SubmitHandler<AddPinFormInputs> = async (data) => {
+    await onSubmit(data);
   };
 
   const descriptionValue = useWatch({ control, name: "description" });
@@ -45,7 +45,7 @@ const AddPinForm: React.FC<AddPinFormProps> = ({ onSubmit, defaultValues }) => {
   return (
     <form
       onSubmit={handleSubmit(submitHandler)}
-      className="space-y-4 px-2 w-full  mx-auto overflow-auto"
+      className="space-y-4 px-2 w-full max-w-2xl mx-auto overflow-auto"
       encType="multipart/form-data"
     >
       {/* Title */}
@@ -82,17 +82,15 @@ const AddPinForm: React.FC<AddPinFormProps> = ({ onSubmit, defaultValues }) => {
           </span>
         )}
       </div>
-      {/* Location */}
+      {/* City */}
       <div>
-        <label className="block mb-1 font-medium">Location</label>
+        <label className="block mb-1 font-medium">City</label>
         <Input
-          {...register("location", { required: "Location is required" })}
-          placeholder="Enter location or address"
+          {...register("city", { required: "City is required" })}
+          placeholder="Enter city"
         />
-        {errors.location && (
-          <span className="text-red-500 text-xs">
-            {errors.location.message}
-          </span>
+        {errors.city && (
+          <span className="text-red-500 text-xs">{errors.city.message}</span>
         )}
       </div>
       {/* Lat/Lng in a single row */}

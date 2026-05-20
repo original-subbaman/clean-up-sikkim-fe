@@ -4,13 +4,17 @@ import FullScreenDialog from "@/components/common/FullScreenDialog";
 import { SearchBox } from "@/components/common/SearchBox";
 import AddPinForm from "@/components/forms/AddPinForm";
 import { getUserLocation } from "@/lib/utils";
-import { MapPin } from "lucide-react";
+import { CheckCircle2Icon, MapPin } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import BottomSheet from "./_components/BottomSheet";
 import EventCard, { type EventCardProps } from "./_components/EventCard";
 import { pins } from "@/lib/mock";
 import Map from "./_components/MapView";
+import { addPin } from "@/lib/api/pins";
+import { ApiError } from "@/lib/api/client";
+import type { AddPinFormInputs } from "@/components/forms/AddPinForm";
+import ResponseAlert from "@/components/common/ResponseAlert";
 
 const events: EventCardProps[] = [
   {
@@ -106,7 +110,16 @@ function MapPage() {
   const router = useRouter();
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
   const [openAddPinModal, setOpenAddPinModal] = useState(false);
+  const [addPinError, setAddPinError] = useState<string | null>(null);
+  const [addPinSuccess, setAddPinSuccess] = useState<string | null>("res");
   const isAuthenticated = true; // Replace with actual authentication logic later
+  const mapMarkers = useMemo(
+    () =>
+      pins.filter((pin): pin is typeof pin & { pinId: string } =>
+        Boolean(pin.pinId),
+      ),
+    [],
+  );
 
   useEffect(() => {
     function handleResize() {
@@ -130,33 +143,75 @@ function MapPage() {
     fetchLocation();
   }, []);
 
-  function onMarkerClick(
-    pinId: string,
-    marker: { lng: number; lat: number; pinId: string },
-  ) {}
+  useEffect(() => {
+    if (!addPinSuccess) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setAddPinSuccess(null);
+    }, 3000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [addPinSuccess]);
+
+  function onMarkerClick() {}
 
   function handleFABClick() {
     // if not authenticate
     if (isAuthenticated) {
+      setAddPinError(null);
+      setAddPinSuccess(null);
       setOpenAddPinModal(true);
     } else {
       router.push("/login");
     }
   }
 
+  async function handleAddPinSubmit(data: AddPinFormInputs) {
+    setAddPinError(null);
+    setAddPinSuccess(null);
+
+    try {
+      await addPin(data);
+      setOpenAddPinModal(false);
+      setAddPinSuccess("Pin reported successfully.");
+    } catch (error) {
+      const message =
+        error instanceof ApiError
+          ? error.message
+          : "Something went wrong while reporting this pin.";
+
+      setAddPinError(message);
+    }
+  }
+
   return (
     <main className="flex-1 flex flex-col ">
+      {addPinSuccess ? (
+        <ResponseAlert
+          title="Success"
+          description={addPinSuccess}
+          icon={<CheckCircle2Icon />}
+        />
+      ) : null}
       <FullScreenDialog
         title="Add New Pin"
         open={openAddPinModal}
-        onOpenChange={setOpenAddPinModal}
+        onOpenChange={(open) => {
+          setOpenAddPinModal(open);
+          if (open) {
+            setAddPinError(null);
+          }
+        }}
         showCloseButton
       >
-        <AddPinForm
-          onSubmit={(data) => {
-            console.log("data", data);
-          }}
-        />
+        {addPinError ? (
+          <div className="mb-4 rounded-md border border-error/30 bg-error-container px-4 py-3 text-sm font-medium text-on-error-container">
+            {addPinError}
+          </div>
+        ) : null}
+        <AddPinForm onSubmit={handleAddPinSubmit} />
         {/* Add Pin Form or Content */}
       </FullScreenDialog>
       <div className="grid grid-cols-12 flex-1">
@@ -175,7 +230,7 @@ function MapPage() {
         {/* Map View */}
         <div className="col-span-12 md:col-span-8 lg:col-span-9 h-full flex flex-col z-1">
           <div className="w-full h-full flex-1">
-            <Map markers={pins} onMarkerClick={onMarkerClick} />
+            <Map markers={mapMarkers} onMarkerClick={onMarkerClick} />
           </div>
         </div>
         <FAB onClick={handleFABClick} position="right" />
