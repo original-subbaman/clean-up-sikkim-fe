@@ -15,6 +15,9 @@ import { addPin } from "@/lib/api/pins";
 import { ApiError } from "@/lib/api/client";
 import type { AddPinFormInputs } from "@/components/forms/AddPinForm";
 import ResponseAlert from "@/components/common/ResponseAlert";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { fetchPins } from "@/store/features/pins/pinsSlice";
+import Loading from "@/components/common/Loading";
 
 const events: EventCardProps[] = [
   {
@@ -108,17 +111,23 @@ function MapPage() {
   >(undefined);
 
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
   const [openAddPinModal, setOpenAddPinModal] = useState(false);
   const [addPinError, setAddPinError] = useState<string | null>(null);
-  const [addPinSuccess, setAddPinSuccess] = useState<string | null>("res");
+  const [addPinSuccess, setAddPinSuccess] = useState<string | null>(null);
   const isAuthenticated = true; // Replace with actual authentication logic later
+
+  const { pins, loading, error } = useAppSelector((state) => {
+    return state.pins;
+  });
+
   const mapMarkers = useMemo(
     () =>
       pins.filter((pin): pin is typeof pin & { pinId: string } =>
         Boolean(pin.pinId),
       ),
-    [],
+    [pins],
   );
 
   useEffect(() => {
@@ -154,6 +163,10 @@ function MapPage() {
 
     return () => window.clearTimeout(timeoutId);
   }, [addPinSuccess]);
+
+  useEffect(() => {
+    dispatch(fetchPins());
+  }, [dispatch]);
 
   function onMarkerClick() {}
 
@@ -230,7 +243,11 @@ function MapPage() {
         {/* Map View */}
         <div className="col-span-12 md:col-span-8 lg:col-span-9 h-full flex flex-col z-1">
           <div className="w-full h-full flex-1">
-            <Map markers={mapMarkers} onMarkerClick={onMarkerClick} />
+            {loading ? (
+              <Loading />
+            ) : (
+              <Map markers={mapMarkers} onMarkerClick={onMarkerClick} />
+            )}
           </div>
         </div>
         <FAB onClick={handleFABClick} position="right" />

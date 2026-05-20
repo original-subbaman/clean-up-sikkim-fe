@@ -18,3 +18,7 @@ export function addPin(newPin: AddPinFormInputs) {
   };
   return apiClient.post<Pin>("/trash-dumps", payload);
 }
+
+export function getPins() {
+  return apiClient.get<Pin[]>("/trash-dumps");
+}

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Be_Vietnam_Pro, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import AuthProvider from "@/components/providers/AuthProvider";
+import ReduxProvider from "@/components/providers/ReduxProvider";
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ["latin"],
@@ -32,7 +33,9 @@ export default function RootLayout({
       className={`${plusJakartaSans.variable} ${beVietnamPro.variable} antialiased font-sans`}
     >
       <body className="flex flex-col min-h-screen w-full ">
-        <AuthProvider>{children}</AuthProvider>
+        <ReduxProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </ReduxProvider>
       </body>
     </html>
   );
