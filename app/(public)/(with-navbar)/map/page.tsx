@@ -9,7 +9,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import BottomSheet from "./_components/BottomSheet";
 import EventCard, { type EventCardProps } from "./_components/EventCard";
-import { pins } from "@/lib/mock";
 import Map from "./_components/MapView";
 import { addPin } from "@/lib/api/pins";
 import { ApiError } from "@/lib/api/client";
@@ -18,89 +17,9 @@ import ResponseAlert from "@/components/common/ResponseAlert";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchPins } from "@/store/features/pins/pinsSlice";
 import Loading from "@/components/common/Loading";
+import { getEvent } from "@/lib/api/event";
+import type { Event } from "@/models/event";
 
-const events: EventCardProps[] = [
-  {
-    eventId: "event1",
-    title: "Riverbank Cleanup",
-    description: "Plastic and bottles scattered along the riverbank.",
-    image: undefined,
-    reportedAt: "2026-04-09",
-    distance: "1.2 km",
-  },
-  {
-    eventId: "event2",
-    title: "Park Litter",
-    description: "Overflowing trash bins in the city park.",
-    image: undefined,
-    reportedAt: "2026-04-08",
-    distance: "0.8 km",
-  },
-  {
-    eventId: "event3",
-    title: "Roadside Waste",
-    description: "Piles of garbage dumped by the roadside.",
-    image: undefined,
-    reportedAt: "2026-04-07",
-    distance: "2.5 km",
-  },
-  {
-    eventId: "event4",
-    title: "Market Area Mess",
-    description: "Food wrappers and plastic bags near the market.",
-    image: undefined,
-    reportedAt: "2026-04-06",
-    distance: "1.7 km",
-  },
-  {
-    eventId: "event5",
-    title: "School Grounds",
-    description: "Litter found around the school playground.",
-    image: undefined,
-    reportedAt: "2026-04-05",
-    distance: "3.0 km",
-  },
-  {
-    eventId: "event6",
-    title: "Bus Stop Trash",
-    description: "Garbage bags left at the main bus stop.",
-    image: undefined,
-    reportedAt: "2026-04-04",
-    distance: "0.5 km",
-  },
-  {
-    eventId: "event7",
-    title: "Hilltop Debris",
-    description: "Construction debris found on the hilltop trail.",
-    image: undefined,
-    reportedAt: "2026-04-03",
-    distance: "4.1 km",
-  },
-  {
-    eventId: "event8",
-    title: "Playground Mess",
-    description: "Plastic bottles and wrappers scattered in the playground.",
-    image: undefined,
-    reportedAt: "2026-04-02",
-    distance: "2.2 km",
-  },
-  {
-    eventId: "event9",
-    title: "Temple Entrance Waste",
-    description: "Offerings and plastic waste near the temple entrance.",
-    image: undefined,
-    reportedAt: "2026-04-01",
-    distance: "3.8 km",
-  },
-  {
-    eventId: "event10",
-    title: "Shopping Complex Litter",
-    description: "Litter found in the parking area of the shopping complex.",
-    image: undefined,
-    reportedAt: "2026-03-31",
-    distance: "1.5 km",
-  },
-];
 function MapPage() {
   const [userLocation, setUserLocation] = useState<
     | {
@@ -116,9 +35,14 @@ function MapPage() {
   const [openAddPinModal, setOpenAddPinModal] = useState(false);
   const [addPinError, setAddPinError] = useState<string | null>(null);
   const [addPinSuccess, setAddPinSuccess] = useState<string | null>(null);
+
+  const [events, setEvents] = useState<Event[]>([]);
+  const [isEventLoading, setIsEventLoading] = useState(false);
+  const [eventError, setEventError] = useState<string | null>(null);
+
   const isAuthenticated = true; // Replace with actual authentication logic later
 
-  const { pins, loading, error } = useAppSelector((state) => {
+  const { pins, loading } = useAppSelector((state) => {
     return state.pins;
   });
 
@@ -128,6 +52,20 @@ function MapPage() {
         Boolean(pin.pinId),
       ),
     [pins],
+  );
+
+  const eventCards = useMemo<EventCardProps[]>(
+    () =>
+      events.map((event) => ({
+        eventId: event.eventId,
+        title: event.title,
+        description: event.description,
+        image: event.photoUrls?.[0],
+        reportedAt: new Date(event.scheduledAt).toLocaleDateString(),
+        distance: "0",
+        link: `/events/${event.eventId}`,
+      })),
+    [events],
   );
 
   useEffect(() => {
@@ -167,6 +105,36 @@ function MapPage() {
   useEffect(() => {
     dispatch(fetchPins());
   }, [dispatch]);
+
+  useEffect(() => {
+    if (!userLocation) {
+      return;
+    }
+
+    async function fetchEvents() {
+      setIsEventLoading(true);
+      setEventError(null);
+
+      try {
+        const res = await getEvent({
+          lat: userLocation?.lat || 27.325,
+          lng: userLocation?.lng || 88.611,
+        });
+        setEvents(res.events);
+      } catch (error) {
+        const message =
+          error instanceof ApiError
+            ? error.message
+            : "Something went wrong while fetching events.";
+
+        setEventError(message);
+      } finally {
+        setIsEventLoading(false);
+      }
+    }
+
+    fetchEvents();
+  }, [userLocation]);
 
   function onMarkerClick() {}
 
@@ -238,7 +206,12 @@ function MapPage() {
               Explore spots you can help clean up.
             </p>
           </div>
-          <SearchAndEventList userLocation={userLocation} events={events} />
+          <SearchAndEventList
+            userLocation={userLocation}
+            events={eventCards}
+            isLoading={isEventLoading}
+            error={eventError}
+          />
         </div>
         {/* Map View */}
         <div className="col-span-12 md:col-span-8 lg:col-span-9 h-full flex flex-col z-1">
@@ -253,7 +226,12 @@ function MapPage() {
         <FAB onClick={handleFABClick} position="right" />
         {/* Bottom Sheet */}
         <BottomSheet isOpen={isBottomSheetOpen}>
-          <SearchAndEventList userLocation={userLocation} events={events} />
+          <SearchAndEventList
+            userLocation={userLocation}
+            events={eventCards}
+            isLoading={isEventLoading}
+            error={eventError}
+          />
         </BottomSheet>
       </div>
     </main>
@@ -263,9 +241,13 @@ function MapPage() {
 function SearchAndEventList({
   userLocation,
   events,
+  isLoading,
+  error,
 }: {
   userLocation: { lng: number; lat: number } | undefined;
   events: EventCardProps[];
+  isLoading: boolean;
+  error: string | null;
 }) {
   return (
     <div className="p-2">
@@ -284,7 +266,19 @@ function SearchAndEventList({
         </span>
       </div>
       <div className="flex flex-col gap-3 flex-1 overflow-auto max-h-145 min-w-0">
-        {events && events.length > 0
+        {isLoading ? <Loading /> : null}
+        {error ? <p className="text-sm text-error">{error}</p> : null}
+        {!isLoading && !error && events.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-outline-variant bg-surface-container-low px-4 py-6 text-center">
+            <p className="text-sm font-semibold text-on-surface">
+              No cleanup events nearby
+            </p>
+            <p className="mt-1 text-xs text-on-surface-variant">
+              Try another location or check back later.
+            </p>
+          </div>
+        ) : null}
+        {!isLoading && !error && events.length > 0
           ? events.map((event) => (
               <EventCard
                 key={event.eventId}
@@ -294,7 +288,7 @@ function SearchAndEventList({
                 image={event.image}
                 reportedAt={event.reportedAt}
                 distance={event.distance}
-                link={`/events/${event.eventId}`} // Replace with actual event link when available
+                link={event.link}
               />
             ))
           : null}
