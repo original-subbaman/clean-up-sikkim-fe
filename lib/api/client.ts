@@ -1,11 +1,19 @@
 import "@/lib/amplify";
+import axios, {
+  AxiosError,
+  AxiosHeaders,
+  type AxiosRequestConfig,
+  type Method,
+  type RawAxiosRequestHeaders,
+} from "axios";
 import { fetchAuthSession } from "aws-amplify/auth";
 
-type JsonBody = Record<string, unknown> | unknown[];
-type ApiRequestBody = BodyInit | JsonBody;
+type ApiRequestBody = AxiosRequestConfig["data"];
 
-type ApiClientOptions = Omit<RequestInit, "body"> & {
-  body?: ApiRequestBody;
+type ApiClientOptions = Omit<
+  AxiosRequestConfig,
+  "baseURL" | "data" | "method" | "url"
+> & {
   auth?: boolean;
 };
 
@@ -39,39 +47,9 @@ function getApiBaseUrl() {
   return API_BASE_URL.replace(/\/$/, "");
 }
 
-function joinUrl(path: string) {
-  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  return `${getApiBaseUrl()}${normalizedPath}`;
-}
-
-function isJsonBody(body: ApiClientOptions["body"]): body is JsonBody {
-  return (
-    body !== undefined &&
-    typeof body === "object" &&
-    !(body instanceof FormData) &&
-    !(body instanceof Blob) &&
-    !(body instanceof ArrayBuffer) &&
-    !(body instanceof URLSearchParams)
-  );
-}
-
 async function getBearerToken() {
   const session = await fetchAuthSession();
   return session.tokens?.idToken?.toString();
-}
-
-async function parseResponse(response: Response) {
-  if (response.status === 204) {
-    return null;
-  }
-
-  const contentType = response.headers.get("content-type");
-
-  if (contentType?.includes("application/json")) {
-    return response.json();
-  }
-
-  return response.text();
 }
 
 function getErrorMessage(payload: unknown, fallback: string) {
@@ -87,20 +65,20 @@ function getErrorMessage(payload: unknown, fallback: string) {
   return fallback;
 }
 
+const axiosClient = axios.create({
+  headers: {
+    Accept: "application/json",
+  },
+});
+
 export async function apiRequest<TResponse>(
   path: string,
-  options: ApiClientOptions = {},
+  options: ApiClientOptions & { data?: ApiRequestBody; method: Method },
 ): Promise<TResponse> {
-  const { auth = true, body, headers, ...requestOptions } = options;
-  const requestHeaders = new Headers(headers);
-
-  if (isJsonBody(body) && !requestHeaders.has("Content-Type")) {
-    requestHeaders.set("Content-Type", "application/json");
-  }
-
-  if (!requestHeaders.has("Accept")) {
-    requestHeaders.set("Accept", "application/json");
-  }
+  const { auth = true, headers, ...requestOptions } = options;
+  const requestHeaders: RawAxiosRequestHeaders = {
+    ...(headers instanceof AxiosHeaders ? headers.toJSON() : headers),
+  };
 
   if (auth) {
     const token = await getBearerToken();
@@ -109,30 +87,36 @@ export async function apiRequest<TResponse>(
       throw new ApiError("You must be signed in to perform this request.", 401);
     }
 
-    requestHeaders.set("Authorization", token);
+    requestHeaders.Authorization = token;
   }
 
-  const requestBody: BodyInit | undefined = isJsonBody(body)
-    ? JSON.stringify(body)
-    : body;
+  try {
+    const response = await axiosClient.request<TResponse>({
+      ...requestOptions,
+      baseURL: getApiBaseUrl(),
+      headers: requestHeaders,
+      url: path,
+    });
 
-  const response = await fetch(joinUrl(path), {
-    ...requestOptions,
-    headers: requestHeaders,
-    body: requestBody,
-  });
+    if (response.status === 204) {
+      return null as TResponse;
+    }
 
-  const payload = await parseResponse(response);
+    return response.data;
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      const status = error.response?.status ?? 0;
+      const payload = error.response?.data;
 
-  if (!response.ok) {
-    throw new ApiError(
-      getErrorMessage(payload, `Request failed with status ${response.status}`),
-      response.status,
-      payload,
-    );
+      throw new ApiError(
+        getErrorMessage(payload, error.message || "Request failed"),
+        status,
+        payload,
+      );
+    }
+
+    throw error;
   }
-
-  return payload as TResponse;
 }
 
 export const apiClient = {
@@ -140,19 +124,19 @@ export const apiClient = {
     apiRequest<TResponse>(path, { ...options, method: "GET" }),
   post: <TResponse>(
     path: string,
-    body?: ApiClientOptions["body"],
+    body?: ApiRequestBody,
     options?: ApiClientOptions,
-  ) => apiRequest<TResponse>(path, { ...options, method: "POST", body }),
+  ) => apiRequest<TResponse>(path, { ...options, method: "POST", data: body }),
   put: <TResponse>(
     path: string,
-    body?: ApiClientOptions["body"],
+    body?: ApiRequestBody,
     options?: ApiClientOptions,
-  ) => apiRequest<TResponse>(path, { ...options, method: "PUT", body }),
+  ) => apiRequest<TResponse>(path, { ...options, method: "PUT", data: body }),
   patch: <TResponse>(
     path: string,
-    body?: ApiClientOptions["body"],
+    body?: ApiRequestBody,
     options?: ApiClientOptions,
-  ) => apiRequest<TResponse>(path, { ...options, method: "PATCH", body }),
+  ) => apiRequest<TResponse>(path, { ...options, method: "PATCH", data: body }),
   delete: <TResponse>(path: string, options?: ApiClientOptions) =>
     apiRequest<TResponse>(path, { ...options, method: "DELETE" }),
 };
