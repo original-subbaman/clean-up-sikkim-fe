@@ -27,7 +27,10 @@ function MapPage() {
         lat: number;
       }
     | undefined
-  >(undefined);
+  >({
+    lat: 27.325,
+    lng: 88.611,
+  });
 
   const router = useRouter();
   const dispatch = useAppDispatch();
@@ -77,18 +80,18 @@ function MapPage() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  useEffect(() => {
-    const fetchLocation = async () => {
-      const location = await getUserLocation();
-      if (location.success) {
-        setUserLocation({
-          lng: parseFloat(location.message.split(",")[0].split(":")[1].trim()),
-          lat: parseFloat(location.message.split(",")[1].split(":")[1].trim()),
-        });
-      }
-    };
-    fetchLocation();
-  }, []);
+  // useEffect(() => {
+  //   const fetchLocation = async () => {
+  //     const location = await getUserLocation();
+  //     if (location.success) {
+  //       setUserLocation({
+  //         lng: parseFloat(location.message.split(",")[0].split(":")[1].trim()),
+  //         lat: parseFloat(location.message.split(",")[1].split(":")[1].trim()),
+  //       });
+  //     }
+  //   };
+  //   fetchLocation();
+  // }, []);
 
   useEffect(() => {
     if (!addPinSuccess) {
