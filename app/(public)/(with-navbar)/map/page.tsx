@@ -40,6 +40,7 @@ function MapPage() {
   const [addPinSuccess, setAddPinSuccess] = useState<string | null>(null);
 
   const [events, setEvents] = useState<Event[]>([]);
+  console.log("🚀 ~ MapPage ~ events:", events);
   const [isEventLoading, setIsEventLoading] = useState(false);
   const [eventError, setEventError] = useState<string | null>(null);
 
@@ -61,7 +62,7 @@ function MapPage() {
     () =>
       events.map((event) => ({
         eventId: event.eventId,
-        title: event.title,
+        name: event.name,
         description: event.description,
         image: event.photoUrls?.[0],
         reportedAt: new Date(event.scheduledAt).toLocaleDateString(),
@@ -286,7 +287,7 @@ function SearchAndEventList({
               <EventCard
                 key={event.eventId}
                 eventId={event.eventId}
-                title={event.title}
+                name={event.name}
                 description={event.description}
                 image={event.image}
                 reportedAt={event.reportedAt}

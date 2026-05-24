@@ -2,7 +2,7 @@ export type Event = {
   eventId: string; // UUID, PK
   pinId: string; // FK → DumpPins
   organisedBy: string; // userId
-  title: string;
+  name: string;
   description: string;
   city: string; // Denormalised from pin
   state: string; // Denormalised from pin

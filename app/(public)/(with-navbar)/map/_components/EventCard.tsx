@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 interface EventCardProps {
   eventId: string;
-  title: string;
+  name: string;
   description: string;
   image?: string;
   reportedAt: string;
@@ -12,7 +12,7 @@ interface EventCardProps {
 }
 
 function EventCard({
-  title,
+  name,
   description,
   image,
   reportedAt,
@@ -52,7 +52,7 @@ function EventCard({
             </span>
           </div>
           <h4 className="text-sm font-bold text-on-surface truncate group-hover:text-emerald-800 transition-colors min-w-0">
-            {title}
+            {name}
           </h4>
           <p className="text-[11px] text-on-surface-variant truncate min-w-0">
             {description}
