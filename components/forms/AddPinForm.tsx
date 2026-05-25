@@ -17,7 +17,7 @@ export type AddPinFormInputs = {
   city: string;
   lat: string;
   lng: string;
-  severity: "low" | "medium" | "high" | "critical";
+  severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
   photo?: FileList;
 };
 
@@ -172,10 +172,10 @@ const AddPinForm: React.FC<AddPinFormProps> = ({ onSubmit, defaultValues }) => {
                 <SelectValue placeholder="Select severity" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="low">Low</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-                <SelectItem value="critical">Critical</SelectItem>
+                <SelectItem value="LOW">Low</SelectItem>
+                <SelectItem value="MEDIUM">Medium</SelectItem>
+                <SelectItem value="HIGH">High</SelectItem>
+                <SelectItem value="CRITICAL">Critical</SelectItem>
               </SelectContent>
             </Select>
           )}
