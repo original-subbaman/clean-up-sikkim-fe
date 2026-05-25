@@ -4,6 +4,7 @@ import { apiClient } from "./client";
 type GetEventParams = {
   lat: number;
   lng: number;
+  range?: "1km" | "5km" | "20km";
 };
 
 export type CreateEventParams = {
@@ -23,9 +24,9 @@ type CreateEventResponse = {
   eventId?: string;
 };
 
-export function getEvent({ lat, lng }: GetEventParams) {
+export function getEvent({ lat, lng, range }: GetEventParams) {
   return apiClient.get<{ events: Event[] }>("/events", {
-    params: { lat, lng },
+    params: { lat, lng, range },
   });
 }
 

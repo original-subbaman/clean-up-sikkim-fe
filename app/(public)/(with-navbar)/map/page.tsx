@@ -3,6 +3,13 @@ import { FAB } from "@/components/common/FAB";
 import FullScreenDialog from "@/components/common/FullScreenDialog";
 import { SearchBox } from "@/components/common/SearchBox";
 import AddPinForm from "@/components/forms/AddPinForm";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
 import { getUserLocation } from "@/lib/utils";
 import { CheckCircle2Icon, MapPin } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -19,6 +26,10 @@ import { fetchPins } from "@/store/features/pins/pinsSlice";
 import Loading from "@/components/common/Loading";
 import { getEvent } from "@/lib/api/event";
 import type { Event } from "@/models/event";
+
+type EventFilter = {
+  range: "1km" | "5km" | "20km";
+};
 
 function MapPage() {
   const [userLocation, setUserLocation] = useState<
@@ -40,9 +51,11 @@ function MapPage() {
   const [addPinSuccess, setAddPinSuccess] = useState<string | null>(null);
 
   const [events, setEvents] = useState<Event[]>([]);
-  console.log("🚀 ~ MapPage ~ events:", events);
   const [isEventLoading, setIsEventLoading] = useState(false);
   const [eventError, setEventError] = useState<string | null>(null);
+  const [eventFilter, setEventFilter] = useState<EventFilter>({
+    range: "20km",
+  });
 
   const isAuthenticated = true; // Replace with actual authentication logic later
 
@@ -123,6 +136,7 @@ function MapPage() {
         const res = await getEvent({
           lat: userLocation?.lat || 27.325,
           lng: userLocation?.lng || 88.611,
+          range: eventFilter.range,
         });
         setEvents(res.events);
       } catch (error) {
@@ -138,7 +152,7 @@ function MapPage() {
     }
 
     fetchEvents();
-  }, [userLocation]);
+  }, [eventFilter.range, userLocation]);
 
   function onMarkerClick() {}
 
@@ -215,6 +229,8 @@ function MapPage() {
             events={eventCards}
             isLoading={isEventLoading}
             error={eventError}
+            eventFilter={eventFilter}
+            setEventFilter={setEventFilter}
           />
         </div>
         {/* Map View */}
@@ -235,6 +251,8 @@ function MapPage() {
             events={eventCards}
             isLoading={isEventLoading}
             error={eventError}
+            eventFilter={eventFilter}
+            setEventFilter={setEventFilter}
           />
         </BottomSheet>
       </div>
@@ -243,6 +261,8 @@ function MapPage() {
 }
 
 function SearchAndEventList({
+  eventFilter,
+  setEventFilter,
   userLocation,
   events,
   isLoading,
@@ -252,6 +272,8 @@ function SearchAndEventList({
   events: EventCardProps[];
   isLoading: boolean;
   error: string | null;
+  eventFilter: EventFilter;
+  setEventFilter: React.Dispatch<React.SetStateAction<EventFilter>>;
 }) {
   return (
     <div className="p-2">
@@ -261,13 +283,19 @@ function SearchAndEventList({
         inputClassName="h-8 md:h-10 text-sm md:text-lg" // input height and font size
         iconClassName="top-1.5 md:top-2.5 h-5 w-5"
       />
-      <div className="flex gap-1 items-center text-sm text-neutral-500 my-4">
-        <MapPin className="w-4 h-4" />
-        <span>
-          {userLocation
-            ? `${userLocation.lng.toFixed(3)}, ${userLocation.lat.toFixed(3)}`
-            : "Could not retrieve your location"}
-        </span>
+      <div className="flex items-center justify-between">
+        <div className="flex gap-1 items-center text-sm text-neutral-500 my-4">
+          <MapPin className="w-4 h-4" />
+          <span>
+            {userLocation
+              ? `${userLocation.lng.toFixed(3)}, ${userLocation.lat.toFixed(3)}`
+              : "Could not retrieve your location"}
+          </span>
+        </div>
+        <RangeFilter
+          eventFilter={eventFilter}
+          setEventFilter={setEventFilter}
+        />
       </div>
       <div className="flex flex-col gap-3 flex-1 overflow-auto max-h-145 min-w-0">
         {isLoading ? <Loading /> : null}
@@ -298,6 +326,35 @@ function SearchAndEventList({
           : null}
       </div>
     </div>
+  );
+}
+
+function RangeFilter({
+  eventFilter,
+  setEventFilter,
+}: {
+  eventFilter: EventFilter;
+  setEventFilter: React.Dispatch<React.SetStateAction<EventFilter>>;
+}) {
+  return (
+    <Select
+      value={eventFilter.range}
+      onValueChange={(value) =>
+        setEventFilter((prev) => ({
+          ...prev,
+          range: value as "1km" | "5km" | "20km",
+        }))
+      }
+    >
+      <SelectTrigger className="w-full max-w-37.5">
+        <SelectValue placeholder="Filter by range" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="1km">Within 1 km</SelectItem>
+        <SelectItem value="5km">Within 5 km</SelectItem>
+        <SelectItem value="20km">Within 20 km</SelectItem>
+      </SelectContent>
+    </Select>
   );
 }
 
