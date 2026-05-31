@@ -22,6 +22,20 @@ import { Controller, useForm } from "react-hook-form";
 import z from "zod";
 import { useRouter } from "next/navigation";
 
+const getStartOfToday = () => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return today;
+};
+
+const formatDateTimeLocal = (date: Date) => {
+  const pad = (value: number) => String(value).padStart(2, "0");
+
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
+    date.getDate(),
+  )}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+};
+
 const createEventSchema = z.object({
   pinId: z.string().min(1, "Meeting point is required"),
   name: z.string().min(1, "Event title is required"),
@@ -32,7 +46,18 @@ const createEventSchema = z.object({
     .int("Max participants must be a whole number")
     .min(1, "At least 1 participant is required"),
   photoUrl: z.string().url("Photo URL must be a valid URL").optional(),
-  scheduledAt: z.string().min(1, "Scheduled date and time is required"),
+  scheduledAt: z
+    .string()
+    .min(1, "Scheduled date and time is required")
+    .refine((value) => {
+      const scheduledDate = new Date(value);
+
+      if (Number.isNaN(scheduledDate.getTime())) {
+        return false;
+      }
+
+      return scheduledDate >= getStartOfToday();
+    }, "Scheduled date must be today or later"),
   lat: z.number(),
   lng: z.number(),
 });
@@ -67,6 +92,10 @@ function CreateEventPage() {
   const [createEventSuccess, setCreateEventSuccess] = useState<string | null>(
     null,
   );
+  const minScheduledAt = useMemo(
+    () => formatDateTimeLocal(getStartOfToday()),
+    [],
+  );
 
   useEffect(() => {
     if (pins.length === 0) {
@@ -86,7 +115,7 @@ function CreateEventPage() {
     }, 3000);
 
     return () => window.clearTimeout(timeoutId);
-  }, [createEventError, createEventSuccess]);
+  }, [createEventError, createEventSuccess, router]);
 
   const availablePins = useMemo(
     () =>
@@ -188,6 +217,7 @@ function CreateEventPage() {
               <Input
                 id="scheduled-at"
                 type="datetime-local"
+                min={minScheduledAt}
                 {...register("scheduledAt")}
               />
               {errors.scheduledAt && (
