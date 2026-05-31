@@ -216,7 +216,7 @@ function MapPage() {
       <div className="grid grid-cols-12 flex-1">
         {/* Side Panel */}
         <div className="hidden md:col-span-4 lg:col-span-3 px-3 md:flex flex-col gap-3">
-          <div>
+          <div className="px-2">
             <p className="md:text-lg lg:text-2xl font-bold text-primary mt-4">
               Nearby Hotspots
             </p>
@@ -278,9 +278,9 @@ function SearchAndEventList({
   return (
     <div className="p-2">
       <SearchBox
-        label="Search by clean up events near you"
-        className="h-8 md:h-10" // container height
-        inputClassName="h-8 md:h-10 text-sm md:text-lg" // input height and font size
+        label="Search cleanup events"
+        className="h-8 md:h-10"
+        inputClassName="h-8 md:h-10 text-sm md:text-lg"
         iconClassName="top-1.5 md:top-2.5 h-5 w-5"
       />
       <div className="flex items-center justify-between">
@@ -297,7 +297,7 @@ function SearchAndEventList({
           setEventFilter={setEventFilter}
         />
       </div>
-      <div className="flex flex-col gap-3 flex-1 overflow-auto max-h-145 min-w-0">
+      <div className="flex flex-col gap-3 p-2 flex-1 overflow-auto max-h-145 min-w-0">
         {isLoading ? <Loading /> : null}
         {error ? <p className="text-sm text-error">{error}</p> : null}
         {!isLoading && !error && events.length === 0 ? (
