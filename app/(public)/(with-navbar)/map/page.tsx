@@ -64,11 +64,22 @@ function MapPage() {
   });
 
   const mapMarkers = useMemo(
-    () =>
-      pins.filter((pin): pin is typeof pin & { pinId: string } =>
+    () => [
+      ...pins.filter((pin): pin is typeof pin & { pinId: string } =>
         Boolean(pin.pinId),
       ),
-    [pins],
+      {
+        pinId: "current-location",
+        lat: userLocation?.lat || 27.325,
+        lng: userLocation?.lng || 88.611,
+        title: "Your Current Location",
+        city: "",
+        state: "",
+        severity: "LOW" as const,
+        description: "This is where you are right now.",
+      },
+    ],
+    [pins, userLocation],
   );
 
   const eventCards = useMemo<EventCardProps[]>(
@@ -239,7 +250,12 @@ function MapPage() {
             {loading ? (
               <Loading />
             ) : (
-              <Map markers={mapMarkers} onMarkerClick={onMarkerClick} />
+              <Map
+                markers={mapMarkers}
+                onMarkerClick={onMarkerClick}
+                lat={userLocation?.lat}
+                lng={userLocation?.lng}
+              />
             )}
           </div>
         </div>
