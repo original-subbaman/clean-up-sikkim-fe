@@ -1,5 +1,6 @@
 "use client";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
+import { ChevronDown } from "lucide-react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "../../../../mapbox-popup.css";
@@ -20,6 +21,11 @@ interface MapProps {
   lng?: number;
 }
 
+const legends = [
+  { label: "Current Location", color: "#007AFF", icon: "/user-marker.svg" },
+  { label: "Trash Bin", color: "#FF9500", icon: "/trash-pin.png" },
+];
+
 function Map({ markers, onMarkerClick, lat, lng }: MapProps) {
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -29,7 +35,7 @@ function Map({ markers, onMarkerClick, lat, lng }: MapProps) {
     mapRef.current = new mapboxgl.Map({
       container: mapContainerRef.current!,
       center: [lng ?? 88.611, lat ?? 27.325], // M.G Marg, Gangtok
-      zoom: 15, // starting zoom
+      zoom: 17, // starting zoom
     });
 
     // Add markers with click handlers if markers are provided
@@ -82,7 +88,6 @@ function Map({ markers, onMarkerClick, lat, lng }: MapProps) {
         if (onMarkerClick) {
           onMarkerClick(pinId, markerData);
         }
-        console.log(`Marker clicked: ${pinId} at [${lng}, ${lat}]`);
         // Show popup on click
         popup.addTo(mapRef.current!);
       });
@@ -95,7 +100,56 @@ function Map({ markers, onMarkerClick, lat, lng }: MapProps) {
   }, [markers, lat, lng]);
 
   return (
-    <div id="map-container" className="w-full h-full" ref={mapContainerRef} />
+    <div className="relative w-full h-full">
+      <MapLegends legends={legends} />
+      <div id="map-container" className="w-full h-full" ref={mapContainerRef} />
+    </div>
+  );
+}
+
+interface MapLegendsProps {
+  legends: { label: string; color: string; icon: string }[];
+}
+
+function MapLegends({ legends }: MapLegendsProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  return (
+    <div className="absolute right-3 top-3 z-10 rounded bg-white p-3 shadow-lg sm:right-5 sm:top-5 sm:w-2xs sm:p-4">
+      <button
+        type="button"
+        aria-expanded={isExpanded}
+        aria-controls="map-legends-list"
+        className="flex w-full items-center justify-between gap-3 sm:hidden"
+        onClick={() => setIsExpanded((expanded) => !expanded)}
+      >
+        <span className="text-sm font-bold">LEGENDS</span>
+        <ChevronDown
+          aria-hidden="true"
+          className={`size-4 transition-transform ${
+            isExpanded ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+      <h6 className="hidden text-sm font-bold sm:block">LEGENDS</h6>
+      <div
+        id="map-legends-list"
+        className={`mt-2 flex-col gap-2 sm:flex sm:flex-row sm:items-center sm:gap-4 ${
+          isExpanded ? "flex" : "hidden"
+        }`}
+      >
+        {legends.map((legend) => (
+          <div key={legend.label} className="flex items-center gap-2">
+            <img
+              src={legend.icon}
+              alt={`${legend.label} icon`}
+              className="w-6 h-6"
+            />
+            <span className="text-xs">{legend.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
