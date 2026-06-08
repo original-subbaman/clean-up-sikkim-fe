@@ -1,8 +1,9 @@
 "use client";
-import { useRef, useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
+import { useEffect, useRef, useState } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import "../../../../mapbox-popup.css";
 
 const accessToken = process.env.NEXT_PUBLIC_MAPBOX_API_KEY;
@@ -17,6 +18,7 @@ interface MarkerData {
 interface MapProps {
   markers?: MarkerData[];
   onMarkerClick?: (pinId: string, marker: MarkerData) => void;
+  onAddNewMarkerClick?: (lat: number, lng: number) => void;
   lat?: number;
   lng?: number;
 }
@@ -26,9 +28,143 @@ const legends = [
   { label: "Trash Bin", color: "#FF9500", icon: "/trash-pin.png" },
 ];
 
-function Map({ markers, onMarkerClick, lat, lng }: MapProps) {
+const CLICKED_MARKER_COORDS_SELECTOR = "[data-clicked-marker-coords]";
+
+function MapPinPlusColored({ className = "size-6" }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="#2DA971"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={`text-primary ${className}`}
+    >
+      <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" />
+      <path d="M12 7v6" stroke="white" />
+      <path d="M9 10h6" stroke="white" />
+    </svg>
+  );
+}
+
+function formatCoords(lat: number, lng: number) {
+  return `Lat: ${lat.toFixed(3)}, Lng: ${lng.toFixed(3)}`;
+}
+
+function createClickedMarkerElement({
+  lat,
+  lng,
+  onAddNewMarkerClick,
+}: {
+  lat: number;
+  lng: number;
+  onAddNewMarkerClick?: (lat: number, lng: number) => void;
+}) {
+  const markerEl = document.createElement("div");
+  markerEl.className = "flex flex-col items-center gap-1 font-sans";
+  markerEl.dataset.clickedMarkerLat = String(lat);
+  markerEl.dataset.clickedMarkerLng = String(lng);
+
+  const markerDiv = document.createElement("div");
+  markerDiv.className = "flex flex-col rounded-xl bg-white p-4 shadow-md";
+
+  const title = document.createElement("span");
+  title.className = "text-md font-bold";
+  title.textContent = "Add New Trash Pin";
+
+  const subtitle = document.createElement("span");
+  subtitle.className = "text-xs text-gray-500 mb-2";
+  subtitle.dataset.clickedMarkerCoords = "true";
+  subtitle.textContent = formatCoords(lat, lng);
+
+  const button = document.createElement("button");
+  button.className =
+    "mt-2 px-3 py-1 text-sm font-medium text-white bg-primary rounded hover:bg-primary/90";
+  button.textContent = "Add Pin";
+  button.addEventListener("click", (event) => {
+    event.stopPropagation();
+
+    const markerLat = Number(markerEl.dataset.clickedMarkerLat);
+    const markerLng = Number(markerEl.dataset.clickedMarkerLng);
+    onAddNewMarkerClick?.(markerLat, markerLng);
+  });
+
+  markerDiv.appendChild(title);
+  markerDiv.appendChild(subtitle);
+  markerDiv.appendChild(button);
+
+  const iconWrapper = document.createElement("div");
+  iconWrapper.className =
+    "flex size-10 items-center justify-center rounded-full text-primary-foreground";
+  iconWrapper.innerHTML = renderToStaticMarkup(
+    <MapPinPlusColored className="size-8" />,
+  );
+
+  markerEl.appendChild(markerDiv);
+  markerEl.appendChild(iconWrapper);
+  markerEl.addEventListener("click", (event) => event.stopPropagation());
+
+  return markerEl;
+}
+
+function updateClickedMarkerElementCoords(
+  markerEl: HTMLElement,
+  lat: number,
+  lng: number,
+) {
+  markerEl.dataset.clickedMarkerLat = String(lat);
+  markerEl.dataset.clickedMarkerLng = String(lng);
+
+  const subtitle = markerEl.querySelector(CLICKED_MARKER_COORDS_SELECTOR);
+  if (subtitle) {
+    subtitle.textContent = formatCoords(lat, lng);
+  }
+}
+
+function createMapMarkerElement(markerData: MarkerData) {
+  const { pinId, title } = markerData;
+  const markerEl = document.createElement("div");
+  const markerImg = document.createElement("img");
+
+  markerImg.src =
+    pinId === "current-location" ? "/user-marker.svg" : "/trash-pin.png";
+  markerImg.alt = title ?? "Map marker";
+  markerImg.style.width = "32px";
+  markerImg.style.height = "32px";
+  markerImg.style.display = "block";
+  markerImg.style.transition = "transform 0.2s cubic-bezier(0.4,0,0.2,1)";
+  markerImg.style.transformOrigin = "bottom center";
+  markerImg.style.fill = pinId === "current-location" ? "#007AFF" : "";
+
+  markerEl.appendChild(markerImg);
+
+  return { markerEl, markerImg };
+}
+
+function createMarkerPopup({ title, lat, lng }: MarkerData) {
+  return new mapboxgl.Popup({
+    className: "popup-title popup-subtitle",
+    closeButton: false,
+    offset: [0, -30],
+  }).setHTML(`
+    <div>
+      <p class="popup-title">${title}</p>
+      <p class="popup-subtitle">${lat.toFixed(3)}, ${lng.toFixed(3)}</p>
+    </div>`);
+}
+
+function Map({
+  markers,
+  onMarkerClick,
+  onAddNewMarkerClick,
+  lat,
+  lng,
+}: MapProps) {
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const clickedMarkerRef = useRef<mapboxgl.Marker | null>(null);
 
   useEffect(() => {
     mapboxgl.accessToken = accessToken;
@@ -38,22 +174,36 @@ function Map({ markers, onMarkerClick, lat, lng }: MapProps) {
       zoom: 17, // starting zoom
     });
 
+    mapRef.current.on("click", (event) => {
+      const { lng, lat } = event.lngLat;
+
+      if (clickedMarkerRef.current) {
+        clickedMarkerRef.current.setLngLat([lng, lat]);
+        updateClickedMarkerElementCoords(
+          clickedMarkerRef.current.getElement(),
+          lat,
+          lng,
+        );
+      } else {
+        const markerEl = createClickedMarkerElement({
+          lat,
+          lng,
+          onAddNewMarkerClick,
+        });
+
+        clickedMarkerRef.current = new mapboxgl.Marker({
+          element: markerEl,
+          offset: [0, -70],
+        })
+          .setLngLat([lng, lat])
+          .addTo(mapRef.current!);
+      }
+    });
+
     // Add markers with click handlers if markers are provided
     (markers ?? []).forEach((markerData) => {
-      const { lng, lat, pinId, title } = markerData;
-
-      const markerEl = document.createElement("div");
-      const markerImg = document.createElement("img");
-      markerImg.src =
-        pinId === "current-location" ? "/user-marker.svg" : "/trash-pin.png";
-      markerImg.alt = title ?? "Map marker";
-      markerImg.style.width = "32px";
-      markerImg.style.height = "32px";
-      markerImg.style.display = "block";
-      markerImg.style.transition = "transform 0.2s cubic-bezier(0.4,0,0.2,1)";
-      markerImg.style.transformOrigin = "bottom center"; // scale from the pin tip
-      markerImg.style.fill = pinId === "current-location" ? "#007AFF" : ""; // blue for current location, orange for trash bins
-      markerEl.appendChild(markerImg);
+      const { lng, lat, pinId } = markerData;
+      const { markerEl, markerImg } = createMapMarkerElement(markerData);
 
       const marker = new mapboxgl.Marker({
         element: markerEl,
@@ -71,16 +221,7 @@ function Map({ markers, onMarkerClick, lat, lng }: MapProps) {
         markerImg.style.transform = "scale(1)";
       });
 
-      // add popover
-      const popup = new mapboxgl.Popup({
-        className: "popup-title popup-subtitle",
-        closeButton: false,
-        offset: [0, -30],
-      }).setHTML(`
-      <div>
-        <p class="popup-title">${title}</p>
-        <p class="popup-subtitle">${lat.toFixed(3)}, ${lng.toFixed(3)}</p>
-      </div>`);
+      const popup = createMarkerPopup(markerData);
 
       el.addEventListener("mouseenter", () => popup.addTo(mapRef.current!));
       el.addEventListener("mouseleave", () => popup.remove());
@@ -95,9 +236,11 @@ function Map({ markers, onMarkerClick, lat, lng }: MapProps) {
     });
 
     return () => {
+      clickedMarkerRef.current?.remove();
+      clickedMarkerRef.current = null;
       mapRef.current?.remove();
     };
-  }, [markers, lat, lng]);
+  }, [markers, onAddNewMarkerClick, onMarkerClick, lat, lng]);
 
   return (
     <div className="relative w-full h-full">
