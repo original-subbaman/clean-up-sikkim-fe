@@ -1,71 +1,84 @@
-import { HandHeart, Pin, Gift, Users } from "lucide-react";
+import { ArrowRight, Pin, Gift, Users } from "lucide-react";
 import Link from "next/link";
+import MapImage from "../public/map.png";
+import Image from "next/image";
 
 export default function Page() {
   return (
     <main className="flex-1 container mx-auto px-4 py-8">
       <HeroSection />
-      <HowItWorksSection />
-      <ImpactSection />
-      <CallToActionSection />
-      <FooterSection />
+      {/* <HowItWorksSection /> */}
+      {/* <ImpactSection /> */}
+      {/* <CallToActionSection /> */}
+      {/* <FooterSection /> */}
     </main>
   );
 }
 
 function HeroSection() {
   return (
-    <section className="flex scroll-mt-20" id="mission">
-      <div className="lg:w-1/2 z-10 text-left">
-        <span className="inline-block text-tertiary font-label text-xs tracking-[0.2em] mb-4">
-          ESTABLISHING THE STEWARDSHIP
-        </span>
-        <h1 className="text-5xl lg:text-7xl font-headline font-extrabold text-on-surface leading-[1.1] tracking-tight mb-8">
-          Turn <span className="text-primary italic">Pollution</span> <br />{" "}
-          into <br /> Participation.
-        </h1>
-        <p className="text-lg lg:text-xl text-on-surface-variant leading-relaxed mb-10 max-w-xl">
-          Empowering local communities to reclaim their landscapes through
-          collective action, digital mapping, and meaningful rewards.
-        </p>
-        <div className="flex flex-wrap gap-4">
-          <Link
-            href="/map"
-            className="bg-primary text-white px-8 py-4 rounded-xl font-semibold editorial-shadow flex items-center gap-2 group transition-all duration-300 hover:scale-105 hover:shadow-lg"
-          >
-            Join The Movement!
-          </Link>
+    <section
+      className="flex-1 flex items-center relative max-w-7xl mx-auto px-6 py-8 lg:py-12 scroll-mt-20"
+      id="mission"
+    >
+      <div className="grid lg:grid-cols-2 gap-12 items-center w-full">
+        <div className="z-10">
+          <span className="inline-block text-tertiary font-label text-xs tracking-[0.2em] mb-4 uppercase">
+            Establishing the Stewardship
+          </span>
+          <h1 className="text-5xl lg:text-7xl font-headline font-extrabold text-on-surface leading-[1.1] tracking-tight mb-6">
+            Turn <span className="text-primary italic">Pollution</span> into
+            Participation.
+          </h1>
+          <p className="text-lg text-on-surface-variant leading-relaxed mb-8 max-w-xl">
+            Empowering local communities to reclaim their landscapes through
+            collective action, digital mapping, and meaningful rewards.
+          </p>
+          <div className="flex flex-wrap gap-4 mb-12">
+            <Link
+              href="/map"
+              className="bg-primary text-on-primary px-8 py-4 rounded-xl font-semibold editorial-shadow flex items-center gap-2 group transition-all hover:scale-105"
+            >
+              Start Pinning
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
+          <div className="grid grid-cols-3 gap-4 pt-8 border-t border-outline-variant">
+            <div>
+              <div className="text-2xl font-headline font-extrabold text-primary">
+                12k+
+              </div>
+              <div className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant">
+                Pins
+              </div>
+            </div>
+            <div>
+              <div className="text-2xl font-headline font-extrabold text-primary">
+                3.2k+
+              </div>
+              <div className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant">
+                Cleanups
+              </div>
+            </div>
+            <div>
+              <div className="text-2xl font-headline font-extrabold text-primary">
+                85k+
+              </div>
+              <div className="text-[10px] font-label uppercase tracking-widest text-on-surface-variant">
+                Volunteers
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-      <div className="lg:w-1/2 relative mt-12 lg:mt-0">
-        <div className="relative w-full aspect-square md:aspect-video lg:aspect-square">
-          {/* Main Image with Bleed */}
-          <div className="absolute inset-0 bg-surface-container-low rounded-4xl overflow-hidden rotate-3 scale-105"></div>
-          <img
-            alt="Community clean up"
-            className="absolute inset-0 w-full h-full object-cover rounded-4xl editorial-shadow -rotate-2 transition-transform hover:rotate-0 duration-700"
-            data-alt="Close-up of diverse community volunteers hands together holding soil and a small green plant sapling in a sunlit garden"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCKx-0xa78bUf65_AfJsx1P-Elqy4ijxQw4lVYAzJDWWw3xivr3kWQZRQn0I_n6f2b4ZgUr3t8SQteWQA9kcXhrSl4yk5TG5RraeElBw7jbxmgx3ahikil6Sxu3hBSq4fQ-GC7sf6AFUnbg98btoXSE94pGD4f86Gp-6pH_cI5B-bYYj4pSuEF-UqiA65ScRBkLypDHh-HVCkmqKdC21wMdd0QbWdR1--kIvneDSKpbiJhevBdCzpJkNfDz2j-_Mv7GU6B2_4LOY3A"
-          />
-          {/* Floating Card */}
-          <div className="bg-white absolute -bottom-10 -left-6 lg:-left-20 p-6 rounded-xl editorial-shadow max-w-xs animate-float border border-primary/5">
-            <div className="flex items-center gap-4 mb-3">
-              <HandHeart className="text-white bg-primary rounded-full w-10 h-10 p-2" />
-              <div>
-                <div className="text-sm font-bold font-headline">New Event</div>
-                <div className="text-xs text-on-surface-variant">
-                  Paljor Stadium Cleanup • 2h ago
-                </div>
-              </div>
-            </div>
-            <div className="flex -space-x-2">
-              <div className="w-8 h-8 rounded-full border-2 border-surface bg-zinc-200"></div>
-              <div className="w-8 h-8 rounded-full border-2 border-surface bg-zinc-300"></div>
-              <div className="w-8 h-8 rounded-full border-2 border-surface bg-zinc-400"></div>
-              <div className="w-8 h-8 rounded-full border-2 border-surface bg-primary text-[10px] text-white flex items-center justify-center">
-                +24
-              </div>
-            </div>
+        <div className="relative hidden lg:block">
+          <div className="relative w-full aspect-square">
+            <div className="absolute inset-0 bg-primary/5 rounded-[3rem] rotate-6 scale-105"></div>
+            <Image
+              alt="Community clean up"
+              className="absolute inset-0 w-full h-full object-cover rounded-[3rem] editorial-shadow -rotate-3"
+              src={MapImage}
+              fill
+            />
           </div>
         </div>
       </div>
@@ -247,30 +260,22 @@ function FooterSection() {
               <li>
                 <Link
                   className="text-zinc-500 dark:text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-300 font-['Be_Vietnam_Pro'] text-sm hover:translate-x-1 transition-transform inline-block"
-                  href="#"
+                  href="/map"
                 >
                   Map Explorer
                 </Link>
               </li>
               <li>
                 <Link
-                  className="text-zinc-500 dark:text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-300 font-['Be_Vietnam_Pro'] text-sm hover:translate-x-1 transition-transform inline-block"
-                  href="#"
-                >
-                  Reward Shop
-                </Link>
-              </li>
-              <li>
-                <Link
                   className="text-emerald-700 dark:text-emerald-300 underline font-['Be_Vietnam_Pro'] text-sm"
-                  href="#"
+                  href="/community"
                 >
                   Impact Report
                 </Link>
               </li>
             </ul>
           </div>
-          <div className="space-y-4">
+          {/* <div className="space-y-4">
             <h4 className="font-headline font-bold text-emerald-800 dark:text-emerald-400 text-sm uppercase tracking-widest">
               Legal
             </h4>
@@ -300,7 +305,7 @@ function FooterSection() {
                 </Link>
               </li>
             </ul>
-          </div>
+          </div> */}
         </div>
       </div>
     </footer>
