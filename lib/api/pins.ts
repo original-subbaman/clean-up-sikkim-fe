@@ -20,5 +20,5 @@ export function addPin(newPin: AddPinFormInputs) {
 }
 
 export function getPins() {
-  return apiClient.get<Pin[]>("/trash-dumps");
+  return apiClient.get<Pin[]>("/trash-dumps", { auth: false });
 }

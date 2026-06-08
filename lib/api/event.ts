@@ -27,6 +27,7 @@ type CreateEventResponse = {
 export function getEvent({ lat, lng, range }: GetEventParams) {
   return apiClient.get<{ events: Event[] }>("/events", {
     params: { lat, lng, range },
+    auth: false,
   });
 }
 

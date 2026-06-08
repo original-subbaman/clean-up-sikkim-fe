@@ -12,7 +12,7 @@ type ApiRequestBody = AxiosRequestConfig["data"];
 
 type ApiClientOptions = Omit<
   AxiosRequestConfig,
-  "baseURL" | "data" | "method" | "url"
+  "auth" | "baseURL" | "data" | "method" | "url"
 > & {
   auth?: boolean;
 };
