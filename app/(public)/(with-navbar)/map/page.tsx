@@ -26,6 +26,7 @@ import { fetchPins } from "@/store/features/pins/pinsSlice";
 import Loading from "@/components/common/Loading";
 import { getEvent } from "@/lib/api/event";
 import type { Event } from "@/models/event";
+import { useAuth } from "@/components/providers/AuthProvider";
 
 type EventFilter = {
   range: "1km" | "5km" | "20km";
@@ -45,6 +46,8 @@ function MapPage() {
 
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const { isAuthenticated } = useAuth();
+
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
   const [openAddPinModal, setOpenAddPinModal] = useState(false);
   const [addPinError, setAddPinError] = useState<string | null>(null);
@@ -60,8 +63,6 @@ function MapPage() {
   const [eventFilter, setEventFilter] = useState<EventFilter>({
     range: "20km",
   });
-
-  const isAuthenticated = true; // Replace with actual authentication logic later
 
   const { pins, loading } = useAppSelector((state) => {
     return state.pins;
