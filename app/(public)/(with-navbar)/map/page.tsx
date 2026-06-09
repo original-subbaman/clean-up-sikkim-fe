@@ -49,6 +49,10 @@ function MapPage() {
   const [openAddPinModal, setOpenAddPinModal] = useState(false);
   const [addPinError, setAddPinError] = useState<string | null>(null);
   const [addPinSuccess, setAddPinSuccess] = useState<string | null>(null);
+  const [selectedPinLocation, setSelectedPinLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
 
   const [events, setEvents] = useState<Event[]>([]);
   const [isEventLoading, setIsEventLoading] = useState(false);
@@ -167,11 +171,12 @@ function MapPage() {
 
   function onMarkerClick() {}
 
-  function handleFABClick() {
+  function handleAddNewMarkerClick(lat: number, lng: number) {
     // if not authenticate
     if (isAuthenticated) {
       setAddPinError(null);
       setAddPinSuccess(null);
+      setSelectedPinLocation({ lat, lng });
       setOpenAddPinModal(true);
     } else {
       router.push("/login");
@@ -221,7 +226,17 @@ function MapPage() {
             {addPinError}
           </div>
         ) : null}
-        <AddPinForm onSubmit={handleAddPinSubmit} />
+        <AddPinForm
+          onSubmit={handleAddPinSubmit}
+          defaultValues={
+            selectedPinLocation
+              ? {
+                  lat: String(selectedPinLocation.lat),
+                  lng: String(selectedPinLocation.lng),
+                }
+              : undefined
+          }
+        />
         {/* Add Pin Form or Content */}
       </FullScreenDialog>
       <div className="grid grid-cols-12 flex-1">
@@ -253,13 +268,13 @@ function MapPage() {
               <Map
                 markers={mapMarkers}
                 onMarkerClick={onMarkerClick}
+                onAddNewMarkerClick={handleAddNewMarkerClick}
                 lat={userLocation?.lat}
                 lng={userLocation?.lng}
               />
             )}
           </div>
         </div>
-        <FAB onClick={handleFABClick} position="right" />
         {/* Bottom Sheet */}
         <BottomSheet isOpen={isBottomSheetOpen}>
           <SearchAndEventList
