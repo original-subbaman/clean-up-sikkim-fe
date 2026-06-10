@@ -13,7 +13,7 @@ import {
 import { getUserLocation } from "@/lib/utils";
 import { CheckCircle2Icon, MapPin } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import BottomSheet from "./_components/BottomSheet";
 import EventCard, { type EventCardProps } from "./_components/EventCard";
 import Map from "./_components/MapView";
@@ -67,6 +67,31 @@ function MapPage() {
   const { pins, loading } = useAppSelector((state) => {
     return state.pins;
   });
+
+  const fetchEvents = useCallback(async () => {
+    if (!userLocation) return;
+
+    setIsEventLoading(true);
+    setEventError(null);
+
+    try {
+      const res = await getEvent({
+        lat: userLocation?.lat || 27.325,
+        lng: userLocation?.lng || 88.611,
+        range: eventFilter.range,
+      });
+      setEvents(res.events);
+    } catch (error) {
+      const message =
+        error instanceof ApiError
+          ? error.message
+          : "Something went wrong while fetching events.";
+
+      setEventError(message);
+    } finally {
+      setIsEventLoading(false);
+    }
+  }, [userLocation, eventFilter.range]);
 
   const mapMarkers = useMemo(
     () => [
@@ -140,35 +165,8 @@ function MapPage() {
   }, [dispatch]);
 
   useEffect(() => {
-    if (!userLocation) {
-      return;
-    }
-
-    async function fetchEvents() {
-      setIsEventLoading(true);
-      setEventError(null);
-
-      try {
-        const res = await getEvent({
-          lat: userLocation?.lat || 27.325,
-          lng: userLocation?.lng || 88.611,
-          range: eventFilter.range,
-        });
-        setEvents(res.events);
-      } catch (error) {
-        const message =
-          error instanceof ApiError
-            ? error.message
-            : "Something went wrong while fetching events.";
-
-        setEventError(message);
-      } finally {
-        setIsEventLoading(false);
-      }
-    }
-
     fetchEvents();
-  }, [eventFilter.range, userLocation]);
+  }, [fetchEvents]);
 
   function onMarkerClick() {}
 
@@ -192,6 +190,7 @@ function MapPage() {
       await addPin(data);
       setOpenAddPinModal(false);
       setAddPinSuccess("Pin reported successfully.");
+      await dispatch(fetchPins()).unwrap();
     } catch (error) {
       const message =
         error instanceof ApiError
