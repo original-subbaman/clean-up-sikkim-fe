@@ -23,6 +23,13 @@ interface MapProps {
   lng?: number;
 }
 
+interface RenderedMarker {
+  marker: mapboxgl.Marker;
+  popup: mapboxgl.Popup;
+  markerImg: HTMLImageElement;
+  data: MarkerData;
+}
+
 const legends = [
   { label: "Current Location", color: "#007AFF", icon: "/user-marker.svg" },
   { label: "Trash Bin", color: "#FF9500", icon: "/trash-pin.png" },
@@ -148,11 +155,19 @@ function createMarkerPopup({ title, lat, lng }: MarkerData) {
     className: "popup-title popup-subtitle",
     closeButton: false,
     offset: [0, -30],
-  }).setHTML(`
+  }).setHTML(createMarkerPopupHtml({ title, lat, lng }));
+}
+
+function createMarkerPopupHtml({
+  title,
+  lat,
+  lng,
+}: Pick<MarkerData, "title" | "lat" | "lng">) {
+  return `
     <div>
       <p class="popup-title">${title}</p>
       <p class="popup-subtitle">${lat.toFixed(3)}, ${lng.toFixed(3)}</p>
-    </div>`);
+    </div>`;
 }
 
 function Map({
@@ -165,16 +180,31 @@ function Map({
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const clickedMarkerRef = useRef<mapboxgl.Marker | null>(null);
+  const renderedMarkersRef = useRef(
+    new globalThis.Map<string, RenderedMarker>(),
+  );
+  const onMarkerClickRef = useRef(onMarkerClick);
+  const onAddNewMarkerClickRef = useRef(onAddNewMarkerClick);
+
+  useEffect(() => {
+    onMarkerClickRef.current = onMarkerClick;
+  }, [onMarkerClick]);
+
+  useEffect(() => {
+    onAddNewMarkerClickRef.current = onAddNewMarkerClick;
+  }, [onAddNewMarkerClick]);
 
   useEffect(() => {
     mapboxgl.accessToken = accessToken;
-    mapRef.current = new mapboxgl.Map({
+    const map = new mapboxgl.Map({
       container: mapContainerRef.current!,
-      center: [lng ?? 88.611, lat ?? 27.325], // M.G Marg, Gangtok
+      center: [88.611, 27.325], // M.G Marg, Gangtok
       zoom: 17, // starting zoom
     });
+    const renderedMarkers = renderedMarkersRef.current;
+    mapRef.current = map;
 
-    mapRef.current.on("click", (event) => {
+    map.on("click", (event) => {
       const { lng, lat } = event.lngLat;
 
       if (clickedMarkerRef.current) {
@@ -188,7 +218,11 @@ function Map({
         const markerEl = createClickedMarkerElement({
           lat,
           lng,
-          onAddNewMarkerClick,
+          onAddNewMarkerClick: (markerLat, markerLng) => {
+            onAddNewMarkerClickRef.current?.(markerLat, markerLng);
+            clickedMarkerRef.current?.remove();
+            clickedMarkerRef.current = null;
+          },
         });
 
         clickedMarkerRef.current = new mapboxgl.Marker({
@@ -196,51 +230,81 @@ function Map({
           offset: [0, -70],
         })
           .setLngLat([lng, lat])
-          .addTo(mapRef.current!);
+          .addTo(map);
       }
-    });
-
-    // Add markers with click handlers if markers are provided
-    (markers ?? []).forEach((markerData) => {
-      const { lng, lat, pinId } = markerData;
-      const { markerEl, markerImg } = createMapMarkerElement(markerData);
-
-      const marker = new mapboxgl.Marker({
-        element: markerEl,
-      })
-        .setLngLat([lng, lat])
-        .addTo(mapRef.current!);
-
-      const el = marker.getElement();
-      el.style.cursor = "pointer";
-
-      el.addEventListener("mouseenter", () => {
-        markerImg.style.transform = "scale(1.2)";
-      });
-      el.addEventListener("mouseleave", () => {
-        markerImg.style.transform = "scale(1)";
-      });
-
-      const popup = createMarkerPopup(markerData);
-
-      el.addEventListener("mouseenter", () => popup.addTo(mapRef.current!));
-      el.addEventListener("mouseleave", () => popup.remove());
-      el.addEventListener("click", () => {
-        if (onMarkerClick) {
-          onMarkerClick(pinId, markerData);
-        }
-        // Show popup on click
-        popup.addTo(mapRef.current!);
-      });
-      marker.setPopup(popup);
     });
 
     return () => {
       clickedMarkerRef.current?.remove();
       clickedMarkerRef.current = null;
-      mapRef.current?.remove();
+      renderedMarkers.forEach(({ marker }) => marker.remove());
+      renderedMarkers.clear();
+      map.remove();
+      mapRef.current = null;
     };
-  }, [markers, onAddNewMarkerClick, onMarkerClick, lat, lng]);
+  }, []);
+
+  useEffect(() => {
+    mapRef.current?.setCenter([lng ?? 88.611, lat ?? 27.325]);
+  }, [lat, lng]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) {
+      return;
+    }
+
+    const nextMarkerIds = new Set((markers ?? []).map(({ pinId }) => pinId));
+
+    renderedMarkersRef.current.forEach(({ marker }, pinId) => {
+      if (!nextMarkerIds.has(pinId)) {
+        marker.remove();
+        renderedMarkersRef.current.delete(pinId);
+      }
+    });
+
+    (markers ?? []).forEach((markerData) => {
+      const renderedMarker = renderedMarkersRef.current.get(markerData.pinId);
+
+      if (renderedMarker) {
+        renderedMarker.data = markerData;
+        renderedMarker.marker.setLngLat([markerData.lng, markerData.lat]);
+        renderedMarker.markerImg.alt = markerData.title ?? "Map marker";
+        renderedMarker.popup.setHTML(createMarkerPopupHtml(markerData));
+        return;
+      }
+
+      const { markerEl, markerImg } = createMapMarkerElement(markerData);
+      const marker = new mapboxgl.Marker({ element: markerEl })
+        .setLngLat([markerData.lng, markerData.lat])
+        .addTo(map);
+      const popup = createMarkerPopup(markerData);
+      const renderedMarkerEntry: RenderedMarker = {
+        marker,
+        popup,
+        markerImg,
+        data: markerData,
+      };
+
+      markerEl.style.cursor = "pointer";
+      markerEl.addEventListener("mouseenter", () => {
+        markerImg.style.transform = "scale(1.2)";
+        popup.addTo(map);
+      });
+      markerEl.addEventListener("mouseleave", () => {
+        markerImg.style.transform = "scale(1)";
+        popup.remove();
+      });
+      markerEl.addEventListener("click", () => {
+        const latestMarkerData = renderedMarkerEntry.data;
+        onMarkerClickRef.current?.(latestMarkerData.pinId, latestMarkerData);
+        popup.addTo(map);
+      });
+
+      marker.setPopup(popup);
+      renderedMarkersRef.current.set(markerData.pinId, renderedMarkerEntry);
+    });
+  }, [markers]);
 
   return (
     <div className="relative w-full h-full">

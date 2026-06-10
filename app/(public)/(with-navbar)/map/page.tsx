@@ -261,18 +261,19 @@ function MapPage() {
         </div>
         {/* Map View */}
         <div className="col-span-12 md:col-span-8 lg:col-span-9 h-full flex flex-col z-1">
-          <div className="w-full h-full flex-1">
+          <div className="relative w-full h-full flex-1">
+            <Map
+              markers={mapMarkers}
+              onMarkerClick={onMarkerClick}
+              onAddNewMarkerClick={handleAddNewMarkerClick}
+              lat={userLocation?.lat}
+              lng={userLocation?.lng}
+            />
             {loading ? (
-              <Loading />
-            ) : (
-              <Map
-                markers={mapMarkers}
-                onMarkerClick={onMarkerClick}
-                onAddNewMarkerClick={handleAddNewMarkerClick}
-                lat={userLocation?.lat}
-                lng={userLocation?.lng}
-              />
-            )}
+              <div className="absolute inset-0 z-20 grid place-items-center bg-surface/60">
+                <Loading />
+              </div>
+            ) : null}
           </div>
         </div>
         {/* Bottom Sheet */}
