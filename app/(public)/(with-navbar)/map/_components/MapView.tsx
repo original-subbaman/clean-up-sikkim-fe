@@ -295,7 +295,8 @@ function Map({
         markerImg.style.transform = "scale(1)";
         popup.remove();
       });
-      markerEl.addEventListener("click", () => {
+      markerEl.addEventListener("click", (event) => {
+        event.stopPropagation();
         const latestMarkerData = renderedMarkerEntry.data;
         onMarkerClickRef.current?.(latestMarkerData.pinId, latestMarkerData);
         popup.addTo(map);
