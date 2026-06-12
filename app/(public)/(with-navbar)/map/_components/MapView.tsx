@@ -12,6 +12,8 @@ interface MarkerData {
   lng: number;
   lat: number;
   title?: string;
+  reportedBy?: string;
+  reporterName?: string;
   pinId: string;
 }
 
@@ -150,23 +152,25 @@ function createMapMarkerElement(markerData: MarkerData) {
   return { markerEl, markerImg };
 }
 
-function createMarkerPopup({ title, lat, lng }: MarkerData) {
+function createMarkerPopup({ title, lat, lng, reporterName }: MarkerData) {
   return new mapboxgl.Popup({
     className: "popup-title popup-subtitle",
     closeButton: false,
     offset: [0, -30],
-  }).setHTML(createMarkerPopupHtml({ title, lat, lng }));
+  }).setHTML(createMarkerPopupHtml({ title, lat, lng, reporterName }));
 }
 
 function createMarkerPopupHtml({
   title,
   lat,
   lng,
-}: Pick<MarkerData, "title" | "lat" | "lng">) {
+  reporterName,
+}: Pick<MarkerData, "title" | "lat" | "lng" | "reporterName">) {
   return `
     <div>
       <p class="popup-title">${title}</p>
       <p class="popup-subtitle">${lat.toFixed(3)}, ${lng.toFixed(3)}</p>
+      ${reporterName?.trim() ? `<p class="popup-subtitle">Reported By: ${reporterName}</p>` : ""}
     </div>`;
 }
 
@@ -177,6 +181,7 @@ function Map({
   lat,
   lng,
 }: MapProps) {
+  console.log("🚀 ~ Map ~ markers:", markers);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const clickedMarkerRef = useRef<mapboxgl.Marker | null>(null);
