@@ -37,7 +37,7 @@ function HeroSection() {
           <div className="flex flex-wrap gap-4 mb-12">
             <Link
               href="/map"
-              className="bg-primary text-on-primary px-8 py-4 rounded-xl font-semibold editorial-shadow flex items-center gap-2 group transition-all hover:scale-105"
+              className="bg-primary text-white text-on-primary px-8 py-4 rounded-xl font-semibold editorial-shadow flex items-center gap-2 group transition-all hover:scale-105"
             >
               Start Pinning
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -75,7 +75,7 @@ function HeroSection() {
             <div className="absolute inset-0 bg-primary/5 rounded-[3rem] rotate-6 scale-105"></div>
             <Image
               alt="Community clean up"
-              className="absolute inset-0 w-full h-full object-cover rounded-[3rem] editorial-shadow -rotate-3"
+              className="absolute inset-0 w-full h-full object-cover rounded-[3rem] editorial-shadow -rotate-3 hover:rotate-1 transition-transform duration-300"
               src={MapImage}
               fill
             />
