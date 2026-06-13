@@ -14,6 +14,7 @@ interface MarkerData {
   title?: string;
   reportedBy?: string;
   reporterName?: string;
+  photoUrls?: string[];
   pinId: string;
 }
 
@@ -60,6 +61,20 @@ function MapPinPlusColored({ className = "size-6" }: { className?: string }) {
 
 function formatCoords(lat: number, lng: number) {
   return `Lat: ${lat.toFixed(3)}, Lng: ${lng.toFixed(3)}`;
+}
+
+function escapeHtml(value: string) {
+  return value.replace(
+    /[&<>"']/g,
+    (character) =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;",
+      })[character]!,
+  );
 }
 
 function createClickedMarkerElement({
@@ -152,12 +167,12 @@ function createMapMarkerElement(markerData: MarkerData) {
   return { markerEl, markerImg };
 }
 
-function createMarkerPopup({ title, lat, lng, reporterName }: MarkerData) {
+function createMarkerPopup(markerData: MarkerData) {
   return new mapboxgl.Popup({
     className: "popup-title popup-subtitle",
     closeButton: false,
     offset: [0, -30],
-  }).setHTML(createMarkerPopupHtml({ title, lat, lng, reporterName }));
+  }).setHTML(createMarkerPopupHtml(markerData));
 }
 
 function createMarkerPopupHtml({
@@ -165,12 +180,24 @@ function createMarkerPopupHtml({
   lat,
   lng,
   reporterName,
-}: Pick<MarkerData, "title" | "lat" | "lng" | "reporterName">) {
+  photoUrls,
+}: Pick<
+  MarkerData,
+  "title" | "lat" | "lng" | "reporterName" | "photoUrls"
+>) {
+  const imageUrl = photoUrls?.[0]?.trim();
+  const popupTitle = escapeHtml(title ?? "Trash pin");
+  const popupReporterName = reporterName?.trim();
+  const imageHtml = imageUrl
+    ? `<img class="popup-image" src="${escapeHtml(imageUrl)}" alt="${popupTitle}" />`
+    : `<div class="popup-image-placeholder">No image available</div>`;
+
   return `
-    <div>
-      <p class="popup-title">${title}</p>
-      <p class="popup-subtitle">${lat.toFixed(3)}, ${lng.toFixed(3)}</p>
-      ${reporterName?.trim() ? `<p class="popup-subtitle">Reported By: ${reporterName}</p>` : ""}
+    <div class="popup-body">
+      ${imageHtml}
+      <p class="popup-title">${popupTitle}</p>
+      <p class="font-thin text-gray-400">${lat.toFixed(3)}, ${lng.toFixed(3)}</p>
+      ${popupReporterName ? `<p class="popup-subtitle">Reported By: ${escapeHtml(popupReporterName)}</p>` : ""}
     </div>`;
 }
 
@@ -181,7 +208,6 @@ function Map({
   lat,
   lng,
 }: MapProps) {
-  console.log("🚀 ~ Map ~ markers:", markers);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const clickedMarkerRef = useRef<mapboxgl.Marker | null>(null);
