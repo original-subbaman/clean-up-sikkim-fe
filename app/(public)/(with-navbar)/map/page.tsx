@@ -17,7 +17,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import BottomSheet from "./_components/BottomSheet";
 import EventCard, { type EventCardProps } from "./_components/EventCard";
 import Map from "./_components/MapView";
-import { addPin } from "@/lib/api/pins";
+import { addPin, uploadTrashPhoto } from "@/lib/api/pins";
 import { ApiError } from "@/lib/api/client";
 import type { AddPinFormInputs } from "@/components/forms/AddPinForm";
 import ResponseAlert from "@/components/common/ResponseAlert";
@@ -187,7 +187,13 @@ function MapPage() {
     setAddPinSuccess(null);
 
     try {
-      await addPin(data);
+      const photo = data.photo?.[0];
+      const photoUrl = photo ? await uploadTrashPhoto(photo) : undefined;
+
+      await addPin({
+        ...data,
+        photoUrls: photoUrl ? [photoUrl] : undefined,
+      });
       setOpenAddPinModal(false);
       setAddPinSuccess("Pin reported successfully.");
       await dispatch(fetchPins()).unwrap();
