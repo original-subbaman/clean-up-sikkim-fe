@@ -5,11 +5,13 @@ import type { AddPinFormInputs } from "@/components/forms/AddPinForm";
 
 type CreatePinPayload = Pick<
   Pin,
-  "title" | "description" | "city" | "lat" | "lng" | "severity" | "photoUrls"
->;
+  "title" | "description" | "city" | "lat" | "lng" | "severity"
+> & {
+  photoKey?: string[];
+};
 
 type CreatePinInput = Omit<AddPinFormInputs, "photo"> & {
-  photoUrls?: string[];
+  photoKey?: string[];
 };
 
 export function addPin(newPin: CreatePinInput) {
@@ -20,7 +22,7 @@ export function addPin(newPin: CreatePinInput) {
     lat: Number(newPin.lat),
     lng: Number(newPin.lng),
     severity: newPin.severity as Pin["severity"],
-    photoUrls: newPin.photoUrls,
+    photoKey: newPin.photoKey,
   };
   return apiClient.post<Pin>("/trash-dumps", payload);
 }
@@ -30,7 +32,8 @@ export function getPins() {
 }
 
 export async function uploadTrashPhoto(file: File) {
-  const { uploadUrl, photoUrl } = await requestPhotoUpload(file);
+  const { uploadUrl, photoKey } = await requestPhotoUpload(file);
+  console.log("🚀 ~ uploadTrashPhoto ~ photoKey:", photoKey);
 
   const response = await fetch(uploadUrl, {
     method: "PUT",
@@ -44,5 +47,5 @@ export async function uploadTrashPhoto(file: File) {
     throw new Error("Failed to upload photo.");
   }
 
-  return photoUrl;
+  return photoKey;
 }

@@ -188,11 +188,11 @@ function MapPage() {
 
     try {
       const photo = data.photo?.[0];
-      const photoUrl = photo ? await uploadTrashPhoto(photo) : undefined;
+      const photoKey = photo ? await uploadTrashPhoto(photo) : undefined;
 
       await addPin({
         ...data,
-        photoUrls: photoUrl ? [photoUrl] : undefined,
+        photoKey: photoKey ? [photoKey] : undefined,
       });
       setOpenAddPinModal(false);
       setAddPinSuccess("Pin reported successfully.");
