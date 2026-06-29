@@ -181,10 +181,7 @@ function createMarkerPopupHtml({
   lng,
   reporterName,
   photoUrls,
-}: Pick<
-  MarkerData,
-  "title" | "lat" | "lng" | "reporterName" | "photoUrls"
->) {
+}: Pick<MarkerData, "title" | "lat" | "lng" | "reporterName" | "photoUrls">) {
   const imageUrl = photoUrls?.[0]?.trim();
   const popupTitle = escapeHtml(title ?? "Trash pin");
   const popupReporterName = reporterName?.trim();
@@ -210,8 +207,8 @@ function Map({
 }: MapProps) {
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
-  const clickedMarkerRef = useRef<mapboxgl.Marker | null>(null);
-  const renderedMarkersRef = useRef(
+  const pendingAddPinMarkerRef = useRef<mapboxgl.Marker | null>(null);
+  const mapMarkerRegistryRef = useRef(
     new globalThis.Map<string, RenderedMarker>(),
   );
   const onMarkerClickRef = useRef(onMarkerClick);
@@ -232,16 +229,16 @@ function Map({
       center: [88.611, 27.325], // M.G Marg, Gangtok
       zoom: 17, // starting zoom
     });
-    const renderedMarkers = renderedMarkersRef.current;
+    const mapMarkerRegistry = mapMarkerRegistryRef.current;
     mapRef.current = map;
 
     map.on("click", (event) => {
       const { lng, lat } = event.lngLat;
 
-      if (clickedMarkerRef.current) {
-        clickedMarkerRef.current.setLngLat([lng, lat]);
+      if (pendingAddPinMarkerRef.current) {
+        pendingAddPinMarkerRef.current.setLngLat([lng, lat]);
         updateClickedMarkerElementCoords(
-          clickedMarkerRef.current.getElement(),
+          pendingAddPinMarkerRef.current.getElement(),
           lat,
           lng,
         );
@@ -251,12 +248,12 @@ function Map({
           lng,
           onAddNewMarkerClick: (markerLat, markerLng) => {
             onAddNewMarkerClickRef.current?.(markerLat, markerLng);
-            clickedMarkerRef.current?.remove();
-            clickedMarkerRef.current = null;
+            pendingAddPinMarkerRef.current?.remove();
+            pendingAddPinMarkerRef.current = null;
           },
         });
 
-        clickedMarkerRef.current = new mapboxgl.Marker({
+        pendingAddPinMarkerRef.current = new mapboxgl.Marker({
           element: markerEl,
           offset: [0, -70],
         })
@@ -266,10 +263,10 @@ function Map({
     });
 
     return () => {
-      clickedMarkerRef.current?.remove();
-      clickedMarkerRef.current = null;
-      renderedMarkers.forEach(({ marker }) => marker.remove());
-      renderedMarkers.clear();
+      pendingAddPinMarkerRef.current?.remove();
+      pendingAddPinMarkerRef.current = null;
+      mapMarkerRegistry.forEach(({ marker }) => marker.remove());
+      mapMarkerRegistry.clear();
       map.remove();
       mapRef.current = null;
     };
@@ -287,15 +284,15 @@ function Map({
 
     const nextMarkerIds = new Set((markers ?? []).map(({ pinId }) => pinId));
 
-    renderedMarkersRef.current.forEach(({ marker }, pinId) => {
+    mapMarkerRegistryRef.current.forEach(({ marker }, pinId) => {
       if (!nextMarkerIds.has(pinId)) {
         marker.remove();
-        renderedMarkersRef.current.delete(pinId);
+        mapMarkerRegistryRef.current.delete(pinId);
       }
     });
 
     (markers ?? []).forEach((markerData) => {
-      const renderedMarker = renderedMarkersRef.current.get(markerData.pinId);
+      const renderedMarker = mapMarkerRegistryRef.current.get(markerData.pinId);
 
       if (renderedMarker) {
         renderedMarker.data = markerData;
@@ -330,11 +327,12 @@ function Map({
         event.stopPropagation();
         const latestMarkerData = renderedMarkerEntry.data;
         onMarkerClickRef.current?.(latestMarkerData.pinId, latestMarkerData);
+        pendingAddPinMarkerRef.current?.remove();
         popup.addTo(map);
       });
 
       marker.setPopup(popup);
-      renderedMarkersRef.current.set(markerData.pinId, renderedMarkerEntry);
+      mapMarkerRegistryRef.current.set(markerData.pinId, renderedMarkerEntry);
     });
   }, [markers]);
 
