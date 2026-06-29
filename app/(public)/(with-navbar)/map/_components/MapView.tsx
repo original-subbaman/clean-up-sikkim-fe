@@ -38,7 +38,7 @@ const legends = [
   { label: "Trash Bin", color: "#FF9500", icon: "/trash-pin.png" },
 ];
 
-const CLICKED_MARKER_COORDS_SELECTOR = "[data-clicked-marker-coords]";
+const ADD_NEW_MARKER_COORDS_SELECTOR = "[data-add-new-marker-coords]";
 
 function MapPinPlusColored({ className = "size-6" }: { className?: string }) {
   return (
@@ -77,7 +77,7 @@ function escapeHtml(value: string) {
   );
 }
 
-function createClickedMarkerElement({
+function createAddNewMarkerElement({
   lat,
   lng,
   onAddNewMarkerClick,
@@ -88,8 +88,8 @@ function createClickedMarkerElement({
 }) {
   const markerEl = document.createElement("div");
   markerEl.className = "flex flex-col items-center gap-1 font-sans";
-  markerEl.dataset.clickedMarkerLat = String(lat);
-  markerEl.dataset.clickedMarkerLng = String(lng);
+  markerEl.dataset.addNewMarkerLat = String(lat);
+  markerEl.dataset.addNewMarkerLng = String(lng);
 
   const markerDiv = document.createElement("div");
   markerDiv.className = "flex flex-col rounded-xl bg-white p-4 shadow-md";
@@ -100,7 +100,7 @@ function createClickedMarkerElement({
 
   const subtitle = document.createElement("span");
   subtitle.className = "text-xs text-gray-500 mb-2";
-  subtitle.dataset.clickedMarkerCoords = "true";
+  subtitle.dataset.addNewMarkerCoords = "true";
   subtitle.textContent = formatCoords(lat, lng);
 
   const button = document.createElement("button");
@@ -110,8 +110,8 @@ function createClickedMarkerElement({
   button.addEventListener("click", (event) => {
     event.stopPropagation();
 
-    const markerLat = Number(markerEl.dataset.clickedMarkerLat);
-    const markerLng = Number(markerEl.dataset.clickedMarkerLng);
+    const markerLat = Number(markerEl.dataset.addNewMarkerLat);
+    const markerLng = Number(markerEl.dataset.addNewMarkerLng);
     onAddNewMarkerClick?.(markerLat, markerLng);
   });
 
@@ -133,21 +133,21 @@ function createClickedMarkerElement({
   return markerEl;
 }
 
-function updateClickedMarkerElementCoords(
+function updateAddNewMarkerElementCoords(
   markerEl: HTMLElement,
   lat: number,
   lng: number,
 ) {
-  markerEl.dataset.clickedMarkerLat = String(lat);
-  markerEl.dataset.clickedMarkerLng = String(lng);
+  markerEl.dataset.addNewMarkerLat = String(lat);
+  markerEl.dataset.addNewMarkerLng = String(lng);
 
-  const subtitle = markerEl.querySelector(CLICKED_MARKER_COORDS_SELECTOR);
+  const subtitle = markerEl.querySelector(ADD_NEW_MARKER_COORDS_SELECTOR);
   if (subtitle) {
     subtitle.textContent = formatCoords(lat, lng);
   }
 }
 
-function createMapMarkerElement(markerData: MarkerData) {
+function createTrashMarkerElement(markerData: MarkerData) {
   const { pinId, title } = markerData;
   const markerEl = document.createElement("div");
   const markerImg = document.createElement("img");
@@ -167,15 +167,15 @@ function createMapMarkerElement(markerData: MarkerData) {
   return { markerEl, markerImg };
 }
 
-function createMarkerPopup(markerData: MarkerData) {
+function createTrashMarkerPopup(markerData: MarkerData) {
   return new mapboxgl.Popup({
     className: "popup-title popup-subtitle",
     closeButton: false,
     offset: [0, -30],
-  }).setHTML(createMarkerPopupHtml(markerData));
+  }).setHTML(createTrashMarkerPopupHtml(markerData));
 }
 
-function createMarkerPopupHtml({
+function createTrashMarkerPopupHtml({
   title,
   lat,
   lng,
@@ -250,13 +250,13 @@ function Map({
 
       if (pendingAddPinMarkerRef.current) {
         pendingAddPinMarkerRef.current.setLngLat([lng, lat]);
-        updateClickedMarkerElementCoords(
+        updateAddNewMarkerElementCoords(
           pendingAddPinMarkerRef.current.getElement(),
           lat,
           lng,
         );
       } else {
-        const markerEl = createClickedMarkerElement({
+        const markerEl = createAddNewMarkerElement({
           lat,
           lng,
           onAddNewMarkerClick: (markerLat, markerLng) => {
@@ -315,15 +315,15 @@ function Map({
         renderedMarker.data = markerData;
         renderedMarker.marker.setLngLat([markerData.lng, markerData.lat]);
         renderedMarker.markerImg.alt = markerData.title ?? "Map marker";
-        renderedMarker.popup.setHTML(createMarkerPopupHtml(markerData));
+        renderedMarker.popup.setHTML(createTrashMarkerPopupHtml(markerData));
         return;
       }
 
-      const { markerEl, markerImg } = createMapMarkerElement(markerData);
+      const { markerEl, markerImg } = createTrashMarkerElement(markerData);
       const marker = new mapboxgl.Marker({ element: markerEl })
         .setLngLat([markerData.lng, markerData.lat])
         .addTo(map);
-      const popup = createMarkerPopup(markerData);
+      const popup = createTrashMarkerPopup(markerData);
       const renderedMarkerEntry: RenderedMarker = {
         marker,
         popup,
