@@ -208,11 +208,22 @@ function Map({
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const pendingAddPinMarkerRef = useRef<mapboxgl.Marker | null>(null);
+  const selectedMarkerIdRef = useRef<string | null>(null);
   const mapMarkerRegistryRef = useRef(
     new globalThis.Map<string, RenderedMarker>(),
   );
   const onMarkerClickRef = useRef(onMarkerClick);
   const onAddNewMarkerClickRef = useRef(onAddNewMarkerClick);
+
+  function closeSelectedMarkerPopup() {
+    const selectedMarkerId = selectedMarkerIdRef.current;
+    if (!selectedMarkerId) {
+      return;
+    }
+
+    mapMarkerRegistryRef.current.get(selectedMarkerId)?.popup.remove();
+    selectedMarkerIdRef.current = null;
+  }
 
   useEffect(() => {
     onMarkerClickRef.current = onMarkerClick;
@@ -234,6 +245,8 @@ function Map({
 
     map.on("click", (event) => {
       const { lng, lat } = event.lngLat;
+
+      closeSelectedMarkerPopup();
 
       if (pendingAddPinMarkerRef.current) {
         pendingAddPinMarkerRef.current.setLngLat([lng, lat]);
@@ -265,6 +278,7 @@ function Map({
     return () => {
       pendingAddPinMarkerRef.current?.remove();
       pendingAddPinMarkerRef.current = null;
+      closeSelectedMarkerPopup();
       mapMarkerRegistry.forEach(({ marker }) => marker.remove());
       mapMarkerRegistry.clear();
       map.remove();
@@ -288,6 +302,9 @@ function Map({
       if (!nextMarkerIds.has(pinId)) {
         marker.remove();
         mapMarkerRegistryRef.current.delete(pinId);
+        if (selectedMarkerIdRef.current === pinId) {
+          selectedMarkerIdRef.current = null;
+        }
       }
     });
 
@@ -321,13 +338,18 @@ function Map({
       });
       markerEl.addEventListener("mouseleave", () => {
         markerImg.style.transform = "scale(1)";
-        popup.remove();
+        if (selectedMarkerIdRef.current !== renderedMarkerEntry.data.pinId) {
+          popup.remove();
+        }
       });
       markerEl.addEventListener("click", (event) => {
         event.stopPropagation();
         const latestMarkerData = renderedMarkerEntry.data;
         onMarkerClickRef.current?.(latestMarkerData.pinId, latestMarkerData);
         pendingAddPinMarkerRef.current?.remove();
+        pendingAddPinMarkerRef.current = null;
+        closeSelectedMarkerPopup();
+        selectedMarkerIdRef.current = latestMarkerData.pinId;
         popup.addTo(map);
       });
 
