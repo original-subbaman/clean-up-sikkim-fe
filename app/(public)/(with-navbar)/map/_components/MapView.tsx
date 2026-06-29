@@ -81,10 +81,12 @@ function createAddNewMarkerElement({
   lat,
   lng,
   onAddNewMarkerClick,
+  onClose,
 }: {
   lat: number;
   lng: number;
   onAddNewMarkerClick?: (lat: number, lng: number) => void;
+  onClose: () => void;
 }) {
   const markerEl = document.createElement("div");
   markerEl.className = "flex flex-col items-center gap-1 font-sans";
@@ -92,22 +94,34 @@ function createAddNewMarkerElement({
   markerEl.dataset.addNewMarkerLng = String(lng);
 
   const markerDiv = document.createElement("div");
-  markerDiv.className = "flex flex-col rounded-xl bg-white p-4 shadow-md";
+  markerDiv.className = "flex w-48 flex-col rounded-xl bg-white p-4 shadow-md";
+
+  const header = document.createElement("div");
+  header.className = "flex items-start justify-between gap-3";
 
   const title = document.createElement("span");
   title.className = "text-md font-bold";
   title.textContent = "Add New Trash Pin";
+
+  const closeButton = document.createElement("button");
+  closeButton.className =
+    "-mr-1 -mt-1 flex size-6 items-center justify-center rounded-full text-base leading-none text-gray-400  hover:text-gray-700";
+  closeButton.textContent = "×";
+  closeButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+    onClose();
+  });
 
   const subtitle = document.createElement("span");
   subtitle.className = "text-xs text-gray-500 mb-2";
   subtitle.dataset.addNewMarkerCoords = "true";
   subtitle.textContent = formatCoords(lat, lng);
 
-  const button = document.createElement("button");
-  button.className =
+  const addPinButton = document.createElement("button");
+  addPinButton.className =
     "mt-2 px-3 py-1 text-sm font-medium text-white bg-primary rounded hover:bg-primary/90";
-  button.textContent = "Add Pin";
-  button.addEventListener("click", (event) => {
+  addPinButton.textContent = "Add Pin";
+  addPinButton.addEventListener("click", (event) => {
     event.stopPropagation();
 
     const markerLat = Number(markerEl.dataset.addNewMarkerLat);
@@ -115,9 +129,12 @@ function createAddNewMarkerElement({
     onAddNewMarkerClick?.(markerLat, markerLng);
   });
 
-  markerDiv.appendChild(title);
+  header.appendChild(title);
+  header.appendChild(closeButton);
+
+  markerDiv.appendChild(header);
   markerDiv.appendChild(subtitle);
-  markerDiv.appendChild(button);
+  markerDiv.appendChild(addPinButton);
 
   const iconWrapper = document.createElement("div");
   iconWrapper.className =
@@ -261,6 +278,10 @@ function Map({
           lng,
           onAddNewMarkerClick: (markerLat, markerLng) => {
             onAddNewMarkerClickRef.current?.(markerLat, markerLng);
+            pendingAddPinMarkerRef.current?.remove();
+            pendingAddPinMarkerRef.current = null;
+          },
+          onClose: () => {
             pendingAddPinMarkerRef.current?.remove();
             pendingAddPinMarkerRef.current = null;
           },
