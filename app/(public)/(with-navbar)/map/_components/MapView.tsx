@@ -8,13 +8,19 @@ import "../../../../mapbox-popup.css";
 
 const accessToken = process.env.NEXT_PUBLIC_MAPBOX_API_KEY;
 
-interface MarkerData {
+export interface MarkerData {
   lng: number;
   lat: number;
   title?: string;
   reportedBy?: string;
   reporterName?: string;
   photoUrls?: string[];
+  description?: string;
+  city?: string;
+  state?: string;
+  status?: "REPORTED" | "VERIFIED" | "CLEANUP_SCHEDULED" | "CLEANED";
+  severity?: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  upvotes?: number;
   pinId: string;
 }
 
@@ -22,6 +28,7 @@ interface MapProps {
   markers?: MarkerData[];
   onMarkerClick?: (pinId: string, marker: MarkerData) => void;
   onAddNewMarkerClick?: (lat: number, lng: number) => void;
+  onMapClick?: () => void;
   lat?: number;
   lng?: number;
 }
@@ -219,6 +226,7 @@ function Map({
   markers,
   onMarkerClick,
   onAddNewMarkerClick,
+  onMapClick,
   lat,
   lng,
 }: MapProps) {
@@ -231,6 +239,7 @@ function Map({
   );
   const onMarkerClickRef = useRef(onMarkerClick);
   const onAddNewMarkerClickRef = useRef(onAddNewMarkerClick);
+  const onMapClickRef = useRef(onMapClick);
 
   function closeSelectedMarkerPopup() {
     const selectedMarkerId = selectedMarkerIdRef.current;
@@ -251,6 +260,10 @@ function Map({
   }, [onAddNewMarkerClick]);
 
   useEffect(() => {
+    onMapClickRef.current = onMapClick;
+  }, [onMapClick]);
+
+  useEffect(() => {
     mapboxgl.accessToken = accessToken;
     const map = new mapboxgl.Map({
       container: mapContainerRef.current!,
@@ -262,6 +275,8 @@ function Map({
 
     map.on("click", (event) => {
       const { lng, lat } = event.lngLat;
+
+      onMapClickRef.current?.();
 
       closeSelectedMarkerPopup();
 
