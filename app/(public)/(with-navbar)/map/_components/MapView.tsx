@@ -4,6 +4,7 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useEffect, useRef, useState } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import type { PinStatus } from "@/models/pins";
 import "../../../../mapbox-popup.css";
 
 const accessToken = process.env.NEXT_PUBLIC_MAPBOX_API_KEY;
@@ -18,7 +19,7 @@ export interface MarkerData {
   description?: string;
   city?: string;
   state?: string;
-  status?: "REPORTED" | "VERIFIED" | "CLEANUP_SCHEDULED" | "CLEANED";
+  status?: PinStatus;
   severity?: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
   upvotes?: number;
   pinId: string;

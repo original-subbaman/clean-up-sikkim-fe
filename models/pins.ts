@@ -1,3 +1,11 @@
+export type PinStatus =
+  | "OPEN"
+  | "REPORTED"
+  | "VERIFIED"
+  | "CLEANUP_SCHEDULED"
+  | "CLEANED"
+  | "CLOSED";
+
 export type Pin = {
   pinId?: string; // UUID, PK
   reportedBy?: string; // userId
@@ -8,7 +16,7 @@ export type Pin = {
   geohash?: string; // precision 6
   city: string;
   state: string;
-  status?: "REPORTED" | "VERIFIED" | "CLEANUP_SCHEDULED" | "CLEANED";
+  status?: PinStatus;
   severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
   photoUrls?: string[]; // S3 URLs
   upvotes?: number;

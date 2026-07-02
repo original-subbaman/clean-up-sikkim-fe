@@ -10,6 +10,7 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { getUserLocation } from "@/lib/utils";
 import { CheckCircle2Icon, MapPin } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -17,6 +18,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import BottomSheet from "./_components/BottomSheet";
 import EventCard, { type EventCardProps } from "./_components/EventCard";
 import Map from "./_components/MapView";
+import type { MarkerData } from "./_components/MapView";
 import { addPin, uploadTrashPhoto } from "@/lib/api/pins";
 import { ApiError } from "@/lib/api/client";
 import type { AddPinFormInputs } from "@/components/forms/AddPinForm";
@@ -26,11 +28,21 @@ import { fetchPins } from "@/store/features/pins/pinsSlice";
 import Loading from "@/components/common/Loading";
 import { getEvent } from "@/lib/api/event";
 import type { Event } from "@/models/event";
+import type { PinStatus } from "@/models/pins";
 import { useAuth } from "@/components/providers/AuthProvider";
 
 type EventFilter = {
   range: "1km" | "5km" | "20km";
 };
+
+const PIN_STATUS_OPTIONS: { value: PinStatus; label: string }[] = [
+  { value: "OPEN", label: "Open" },
+  { value: "REPORTED", label: "Reported" },
+  { value: "VERIFIED", label: "Verified" },
+  { value: "CLEANUP_SCHEDULED", label: "Cleanup scheduled" },
+  { value: "CLEANED", label: "Cleaned" },
+  { value: "CLOSED", label: "Closed" },
+];
 
 function MapPage() {
   const [userLocation, setUserLocation] = useState<
@@ -56,6 +68,10 @@ function MapPage() {
     lat: number;
     lng: number;
   } | null>(null);
+  const [selectedPin, setSelectedPin] = useState<MarkerData | null>(null);
+  const [pinStatusFilters, setPinStatusFilters] = useState<PinStatus[]>(() =>
+    PIN_STATUS_OPTIONS.map(({ value }) => value),
+  );
 
   const [events, setEvents] = useState<Event[]>([]);
   const [isEventLoading, setIsEventLoading] = useState(false);
@@ -95,8 +111,10 @@ function MapPage() {
 
   const mapMarkers = useMemo(
     () => [
-      ...pins.filter((pin): pin is typeof pin & { pinId: string } =>
-        Boolean(pin.pinId),
+      ...pins.filter(
+        (pin): pin is typeof pin & { pinId: string } =>
+          Boolean(pin.pinId) &&
+          Boolean(pin.status && pinStatusFilters.includes(pin.status)),
       ),
       {
         pinId: "current-location",
@@ -109,7 +127,7 @@ function MapPage() {
         description: "This is where you are right now.",
       },
     ],
-    [pins, userLocation],
+    [pins, pinStatusFilters, userLocation],
   );
 
   const eventCards = useMemo<EventCardProps[]>(
@@ -168,7 +186,9 @@ function MapPage() {
     fetchEvents();
   }, [fetchEvents]);
 
-  function onMarkerClick() {}
+  function onMarkerClick(_pinId: string, marker: MarkerData) {
+    setSelectedPin(marker);
+  }
 
   function handleAddNewMarkerClick(lat: number, lng: number) {
     // if not authenticate
@@ -208,7 +228,7 @@ function MapPage() {
   }
 
   return (
-    <main className="flex-1 flex flex-col ">
+    <main className="flex h-[calc(100dvh-4.5rem)] min-h-0 flex-col overflow-hidden md:h-[calc(100dvh-3.75rem)]">
       {addPinSuccess ? (
         <ResponseAlert
           title="Success"
@@ -245,9 +265,9 @@ function MapPage() {
         />
         {/* Add Pin Form or Content */}
       </FullScreenDialog>
-      <div className="grid grid-cols-12 flex-1">
+      <div className="grid min-h-0 flex-1 grid-cols-12">
         {/* Side Panel */}
-        <div className="hidden md:col-span-4 lg:col-span-3 px-3 md:flex flex-col gap-3">
+        {/* <div className="hidden md:col-span-4 lg:col-span-3 px-3 md:flex flex-col gap-3">
           <div className="px-2">
             <p className="md:text-lg lg:text-2xl font-bold text-primary mt-4">
               Nearby Hotspots
@@ -264,13 +284,18 @@ function MapPage() {
             eventFilter={eventFilter}
             setEventFilter={setEventFilter}
           />
-        </div>
+        </div> */}
         {/* Map View */}
-        <div className="col-span-12 md:col-span-8 lg:col-span-9 h-full flex flex-col z-1">
-          <div className="relative w-full h-full flex-1">
+        <div className="z-1 col-span-12 flex min-h-0 flex-col">
+          <div className="relative min-h-0 w-full flex-1">
+            <PinFilters
+              statuses={pinStatusFilters}
+              onStatusesChange={setPinStatusFilters}
+            />
             <Map
               markers={mapMarkers}
               onMarkerClick={onMarkerClick}
+              onMapClick={() => setSelectedPin(null)}
               onAddNewMarkerClick={handleAddNewMarkerClick}
               lat={userLocation?.lat}
               lng={userLocation?.lng}
@@ -295,6 +320,45 @@ function MapPage() {
         </BottomSheet>
       </div>
     </main>
+  );
+}
+
+function PinFilters({
+  statuses,
+  onStatusesChange,
+}: {
+  statuses: PinStatus[];
+  onStatusesChange: React.Dispatch<React.SetStateAction<PinStatus[]>>;
+}) {
+  return (
+    <div className="absolute top-4 left-1/2 z-10 w-full max-w-3xl -translate-x-1/2 px-4 md:px-0">
+      <div className="flex flex-wrap items-center justify-center gap-2 rounded-full bg-white/90 px-3 py-2 shadow-md backdrop-blur-sm">
+        {PIN_STATUS_OPTIONS.map(({ value, label }) => {
+          const id = `pin-status-${value.toLowerCase()}`;
+
+          return (
+            <label
+              key={value}
+              htmlFor={id}
+              className="flex cursor-pointer items-center gap-2 rounded-full px-2 py-1 text-sm font-medium text-slate-700"
+            >
+              <Checkbox
+                id={id}
+                checked={statuses.includes(value)}
+                onCheckedChange={(checked) =>
+                  onStatusesChange((current) =>
+                    checked
+                      ? [...current, value]
+                      : current.filter((status) => status !== value),
+                  )
+                }
+              />
+              {label}
+            </label>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
