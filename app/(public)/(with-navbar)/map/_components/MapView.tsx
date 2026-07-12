@@ -1,11 +1,12 @@
 "use client";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, LocateFixed, MapIcon } from "lucide-react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useEffect, useRef, useState } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { PinStatus } from "@/models/pins";
 import "../../../../mapbox-popup.css";
+import { Button } from "@/components/ui/button";
 
 const accessToken = process.env.NEXT_PUBLIC_MAPBOX_API_KEY;
 
@@ -252,6 +253,15 @@ function Map({
     selectedMarkerIdRef.current = null;
   }
 
+  function recenterToUserLocation() {
+    if (lng && lat) {
+      mapRef?.current?.flyTo({
+        center: [lng, lat],
+        essential: true,
+      });
+    }
+  }
+
   useEffect(() => {
     onMarkerClickRef.current = onMarkerClick;
   }, [onMarkerClick]);
@@ -401,7 +411,14 @@ function Map({
 
   return (
     <div className="relative w-full h-full">
-      <MapLegends legends={legends} />
+      <div
+        className="absolute right-3 top-3 z-10 p-3 
+      flex flex-col gap-0.5 items-end 
+      sm:right-5 sm:top-5 sm:w-2xs sm:p-4"
+      >
+        <MapLegends legends={legends} />
+        <RecenterButton onClick={recenterToUserLocation} />
+      </div>
       <div id="map-container" className="w-full h-full" ref={mapContainerRef} />
     </div>
   );
@@ -411,19 +428,33 @@ interface MapLegendsProps {
   legends: { label: string; color: string; icon: string }[];
 }
 
+function RecenterButton({ onClick }: { onClick: () => void }) {
+  return (
+    <Button
+      variant="default"
+      size="icon"
+      aria-label="Recenter map to user's location"
+      className="bg-white text-gray-500 active:bg-slate-100 active:scale-95 transition sm:p-4 md:p-2 "
+      onClick={onClick}
+    >
+      <LocateFixed className="size-5" />
+    </Button>
+  );
+}
+
 function MapLegends({ legends }: MapLegendsProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className="absolute right-3 top-3 z-10 rounded bg-white p-3 shadow-lg sm:right-5 sm:top-5 sm:w-2xs sm:p-4">
+    <div className="rounded bg-white p-3 shadow-lg sm:right-5 sm:top-5 sm:p-4 md:p-2">
       <button
         type="button"
         aria-expanded={isExpanded}
         aria-controls="map-legends-list"
-        className="flex w-full items-center justify-between gap-3 sm:hidden"
+        className="flex w-full items-center justify-between gap-3"
         onClick={() => setIsExpanded((expanded) => !expanded)}
       >
-        <span className="text-sm font-bold">LEGENDS</span>
+        <MapIcon className="size-4 text-gray-500" />
         <ChevronDown
           aria-hidden="true"
           className={`size-4 transition-transform ${
@@ -431,10 +462,9 @@ function MapLegends({ legends }: MapLegendsProps) {
           }`}
         />
       </button>
-      <h6 className="hidden text-sm font-bold sm:block">LEGENDS</h6>
       <div
         id="map-legends-list"
-        className={`mt-2 flex-col gap-2 sm:flex sm:flex-row sm:items-center sm:gap-4 ${
+        className={`mt-2 flex-col gap-2  sm:gap-4 ${
           isExpanded ? "flex" : "hidden"
         }`}
       >
