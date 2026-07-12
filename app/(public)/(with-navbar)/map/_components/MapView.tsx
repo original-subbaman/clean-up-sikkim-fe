@@ -371,13 +371,13 @@ function Map({
       markerEl.style.cursor = "pointer";
       markerEl.addEventListener("mouseenter", () => {
         markerImg.style.transform = "scale(1.2)";
-        popup.addTo(map);
+        // popup.addTo(map);
       });
       markerEl.addEventListener("mouseleave", () => {
         markerImg.style.transform = "scale(1)";
-        if (selectedMarkerIdRef.current !== renderedMarkerEntry.data.pinId) {
-          popup.remove();
-        }
+        // if (selectedMarkerIdRef.current !== renderedMarkerEntry.data.pinId) {
+        //   popup.remove();
+        // }
       });
       markerEl.addEventListener("click", (event) => {
         event.stopPropagation();
@@ -388,6 +388,10 @@ function Map({
         closeSelectedMarkerPopup();
         selectedMarkerIdRef.current = latestMarkerData.pinId;
         popup.addTo(map);
+        map.flyTo({
+          center: [latestMarkerData.lng, latestMarkerData.lat],
+          essential: true,
+        });
       });
 
       marker.setPopup(popup);
