@@ -36,12 +36,10 @@ type EventFilter = {
 };
 
 const PIN_STATUS_OPTIONS: { value: PinStatus; label: string }[] = [
-  { value: "OPEN", label: "Open" },
   { value: "REPORTED", label: "Reported" },
   { value: "VERIFIED", label: "Verified" },
   { value: "CLEANUP_SCHEDULED", label: "Cleanup scheduled" },
   { value: "CLEANED", label: "Cleaned" },
-  { value: "CLOSED", label: "Closed" },
 ];
 
 function MapPage() {
@@ -69,8 +67,8 @@ function MapPage() {
     lng: number;
   } | null>(null);
   const [selectedPin, setSelectedPin] = useState<MarkerData | null>(null);
-  const [pinStatusFilters, setPinStatusFilters] = useState<PinStatus[]>(() =>
-    PIN_STATUS_OPTIONS.map(({ value }) => value),
+  const [pinStatusFilters, setPinStatusFilters] = useState<PinStatus>(
+    PIN_STATUS_OPTIONS[0].value,
   );
 
   const [events, setEvents] = useState<Event[]>([]);
@@ -113,8 +111,7 @@ function MapPage() {
     () => [
       ...pins.filter(
         (pin): pin is typeof pin & { pinId: string } =>
-          Boolean(pin.pinId) &&
-          Boolean(pin.status && pinStatusFilters.includes(pin.status)),
+          Boolean(pin.pinId) && pin.status === pinStatusFilters,
       ),
       {
         pinId: "current-location",
@@ -179,8 +176,12 @@ function MapPage() {
   }, [addPinSuccess]);
 
   useEffect(() => {
-    dispatch(fetchPins());
-  }, [dispatch]);
+    dispatch(
+      fetchPins({
+        status: pinStatusFilters,
+      }),
+    );
+  }, [dispatch, pinStatusFilters]);
 
   useEffect(() => {
     fetchEvents();
@@ -216,7 +217,11 @@ function MapPage() {
       });
       setOpenAddPinModal(false);
       setAddPinSuccess("Pin reported successfully.");
-      await dispatch(fetchPins()).unwrap();
+      await dispatch(
+        fetchPins({
+          status: pinStatusFilters,
+        }),
+      ).unwrap();
     } catch (error) {
       const message =
         error instanceof ApiError
@@ -327,8 +332,8 @@ function PinFilters({
   statuses,
   onStatusesChange,
 }: {
-  statuses: PinStatus[];
-  onStatusesChange: React.Dispatch<React.SetStateAction<PinStatus[]>>;
+  statuses: PinStatus;
+  onStatusesChange: React.Dispatch<React.SetStateAction<PinStatus>>;
 }) {
   return (
     <div className="absolute top-4 left-1/2 z-10 w-full max-w-3xl -translate-x-1/2 px-4 md:px-0">
@@ -344,13 +349,9 @@ function PinFilters({
             >
               <Checkbox
                 id={id}
-                checked={statuses.includes(value)}
+                checked={statuses === value}
                 onCheckedChange={(checked) =>
-                  onStatusesChange((current) =>
-                    checked
-                      ? [...current, value]
-                      : current.filter((status) => status !== value),
-                  )
+                  onStatusesChange(checked === true ? value : statuses)
                 }
               />
               {label}

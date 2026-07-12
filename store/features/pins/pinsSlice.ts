@@ -1,10 +1,13 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { getPins } from "@/lib/api/pins";
+import { getPins, GetPinsParams } from "@/lib/api/pins";
 import { Pin } from "@/models/pins";
 
-export const fetchPins = createAsyncThunk("pins/fetchPins", async () => {
-  return getPins();
-});
+export const fetchPins = createAsyncThunk(
+  "pins/fetchPins",
+  async (params?: GetPinsParams) => {
+    return getPins(params);
+  },
+);
 
 interface PinsState {
   pins: Pin[];

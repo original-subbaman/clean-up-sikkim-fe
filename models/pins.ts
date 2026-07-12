@@ -1,10 +1,8 @@
 export type PinStatus =
-  | "OPEN"
   | "REPORTED"
   | "VERIFIED"
   | "CLEANUP_SCHEDULED"
-  | "CLEANED"
-  | "CLOSED";
+  | "CLEANED";
 
 export type Pin = {
   pinId?: string; // UUID, PK

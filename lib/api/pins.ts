@@ -14,6 +14,13 @@ type CreatePinInput = Omit<AddPinFormInputs, "photo"> & {
   photoKey?: string[];
 };
 
+export type GetPinsParams = {
+  status?: string;
+  lat?: number;
+  lng?: number;
+  range?: string;
+};
+
 export function addPin(newPin: CreatePinInput) {
   const payload: CreatePinPayload = {
     title: newPin.title,
@@ -27,13 +34,12 @@ export function addPin(newPin: CreatePinInput) {
   return apiClient.post<Pin>("/trash-dumps", payload);
 }
 
-export function getPins() {
-  return apiClient.get<Pin[]>("/trash-dumps", { auth: false });
+export function getPins(params?: GetPinsParams) {
+  return apiClient.get<Pin[]>("/trash-dumps", { auth: false, params });
 }
 
 export async function uploadTrashPhoto(file: File) {
   const { uploadUrl, photoKey } = await requestPhotoUpload(file);
-  console.log("🚀 ~ uploadTrashPhoto ~ photoKey:", photoKey);
 
   const response = await fetch(uploadUrl, {
     method: "PUT",
