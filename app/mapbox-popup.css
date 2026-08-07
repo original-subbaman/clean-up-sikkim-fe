@@ -44,3 +44,69 @@
   font-size: 10px;
   font-weight: normal;
 }
+
+.popup-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.popup-action-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 10px;
+  cursor: pointer;
+  width: 100%;
+  transition:
+    background-color 150ms ease,
+    box-shadow 150ms ease,
+    transform 100ms ease;
+}
+
+.popup-action-button:hover {
+  box-shadow: 0 2px 6px rgb(0 0 0 / 18%);
+  transform: translateY(-1px);
+}
+
+.popup-action-button:active {
+  box-shadow: none;
+  transform: translateY(0) scale(0.97);
+}
+
+.popup-action-button:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.popup-flag-button {
+  background-color: #f87171; /* Red */
+  color: white;
+  margin-right: 4px;
+}
+
+.popup-flag-button:hover {
+  background-color: #ef4444;
+}
+
+.popup-flag-button:active {
+  background-color: #dc2626;
+}
+
+.popup-upvote-button {
+  background-color: #34d399; /* Green */
+  color: white;
+  margin-left: 4px;
+}
+
+.popup-upvote-button:hover {
+  background-color: #10b981;
+}
+
+.popup-upvote-button:active {
+  background-color: #059669;
+}

@@ -1,5 +1,11 @@
 "use client";
-import { ChevronDown, LocateFixed, MapIcon } from "lucide-react";
+import {
+  ChevronDown,
+  LocateFixed,
+  MapIcon,
+  ThumbsUp,
+  ThumbsDown,
+} from "lucide-react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useEffect, useRef, useState } from "react";
@@ -29,6 +35,8 @@ export interface MarkerData {
 interface MapProps {
   markers?: MarkerData[];
   onMarkerClick?: (pinId: string, marker: MarkerData) => void;
+  onFlagClick?: ((pinId: string, marker: MarkerData) => void) | null;
+  onUpvoteClick?: ((pinId: string, marker: MarkerData) => void) | null;
   onAddNewMarkerClick?: (lat: number, lng: number) => void;
   onMapClick?: () => void;
   lat?: number;
@@ -48,6 +56,14 @@ const legends = [
 ];
 
 const ADD_NEW_MARKER_COORDS_SELECTOR = "[data-add-new-marker-coords]";
+
+type PopupProps = Pick<
+  MarkerData,
+  "title" | "lat" | "lng" | "reporterName" | "photoUrls" | "status"
+> & {
+  onFlagClick?: (() => void) | null;
+  onUpvoteClick?: (() => void) | null;
+};
 
 function MapPinPlusColored({ className = "size-6" }: { className?: string }) {
   return (
@@ -193,12 +209,31 @@ function createTrashMarkerElement(markerData: MarkerData) {
   return { markerEl, markerImg };
 }
 
-function createTrashMarkerPopup(markerData: MarkerData) {
+function createTrashMarkerPopup(popUpProps: PopupProps) {
   return new mapboxgl.Popup({
     className: "popup-title popup-subtitle",
     closeButton: false,
     offset: [0, -30],
-  }).setHTML(createTrashMarkerPopupHtml(markerData));
+  }).setDOMContent(createTrashMarkerPopupContent(popUpProps));
+}
+
+function createTrashMarkerPopupContent(popUpProps: PopupProps) {
+  const popupContent = document.createElement("div");
+  popupContent.innerHTML = createTrashMarkerPopupHtml(popUpProps);
+
+  if (popUpProps.onFlagClick) {
+    popupContent
+      .querySelector("[data-flag]")
+      ?.addEventListener("click", popUpProps.onFlagClick);
+  }
+
+  if (popUpProps.onUpvoteClick) {
+    popupContent
+      .querySelector("[data-upvote]")
+      ?.addEventListener("click", popUpProps.onUpvoteClick);
+  }
+
+  return popupContent;
 }
 
 function createTrashMarkerPopupHtml({
@@ -207,13 +242,35 @@ function createTrashMarkerPopupHtml({
   lng,
   reporterName,
   photoUrls,
-}: Pick<MarkerData, "title" | "lat" | "lng" | "reporterName" | "photoUrls">) {
+  status,
+  onFlagClick,
+  onUpvoteClick,
+}: PopupProps) {
   const imageUrl = photoUrls?.[0]?.trim();
   const popupTitle = escapeHtml(title ?? "Trash pin");
   const popupReporterName = reporterName?.trim();
   const imageHtml = imageUrl
     ? `<img class="popup-image" src="${escapeHtml(imageUrl)}" alt="${popupTitle}" />`
     : `<div class="popup-image-placeholder">No image available</div>`;
+  const isStatusReported = status === "REPORTED";
+  const hasActions = isStatusReported && (onFlagClick || onUpvoteClick);
+
+  const flagIconHtml = renderToStaticMarkup(
+    <ThumbsDown aria-hidden="true" className="size-3" />,
+  );
+
+  const upvoteIconHtml = renderToStaticMarkup(
+    <ThumbsUp aria-hidden="true" className="size-3" />,
+  );
+
+  const flagButtonHtml =
+    isStatusReported && onFlagClick
+      ? `<button type="button" class="popup-action-button popup-flag-button" data-flag>Flag <span>${flagIconHtml}</span></button>`
+      : "";
+  const upvoteButtonHtml =
+    isStatusReported && onUpvoteClick
+      ? `<button type="button" class="popup-action-button popup-upvote-button" data-upvote>Upvote <span>${upvoteIconHtml}</span></button>`
+      : "";
 
   return `
     <div class="popup-body">
@@ -221,12 +278,82 @@ function createTrashMarkerPopupHtml({
       <p class="popup-title">${popupTitle}</p>
       <p class="font-thin text-gray-400">${lat.toFixed(3)}, ${lng.toFixed(3)}</p>
       ${popupReporterName ? `<p class="popup-subtitle">Reported By: ${escapeHtml(popupReporterName)}</p>` : ""}
-    </div>`;
+      ${
+        hasActions
+          ? `<div class="popup-actions">
+          ${flagButtonHtml}
+          ${upvoteButtonHtml}
+        </div>`
+          : ""
+      }
+    </div>
+  `;
+}
+
+interface MapLegendsProps {
+  legends: { label: string; color: string; icon: string }[];
+}
+
+function RecenterButton({ onClick }: { onClick: () => void }) {
+  return (
+    <Button
+      variant="default"
+      size="icon"
+      aria-label="Recenter map to user's location"
+      className="bg-white text-gray-500 active:bg-slate-100 active:scale-95 transition sm:p-4 md:p-2 "
+      onClick={onClick}
+    >
+      <LocateFixed className="size-5" />
+    </Button>
+  );
+}
+
+function MapLegends({ legends }: MapLegendsProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  return (
+    <div className="rounded bg-white p-3 shadow-lg sm:right-5 sm:top-5 sm:p-4 md:p-2">
+      <button
+        type="button"
+        aria-expanded={isExpanded}
+        aria-controls="map-legends-list"
+        className="flex w-full items-center justify-between gap-3"
+        onClick={() => setIsExpanded((expanded) => !expanded)}
+      >
+        <MapIcon className="size-4 text-gray-500" />
+        <ChevronDown
+          aria-hidden="true"
+          className={`size-4 transition-transform ${
+            isExpanded ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+      <div
+        id="map-legends-list"
+        className={`mt-2 flex-col gap-2  sm:gap-4 ${
+          isExpanded ? "flex" : "hidden"
+        }`}
+      >
+        {legends.map((legend) => (
+          <div key={legend.label} className="flex items-center gap-2">
+            <img
+              src={legend.icon}
+              alt={`${legend.label} icon`}
+              className="w-6 h-6"
+            />
+            <span className="text-xs">{legend.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function Map({
   markers,
   onMarkerClick,
+  onFlagClick,
+  onUpvoteClick,
   onAddNewMarkerClick,
   onMapClick,
   lat,
@@ -362,7 +489,17 @@ function Map({
         renderedMarker.data = markerData;
         renderedMarker.marker.setLngLat([markerData.lng, markerData.lat]);
         renderedMarker.markerImg.alt = markerData.title ?? "Map marker";
-        renderedMarker.popup.setHTML(createTrashMarkerPopupHtml(markerData));
+        renderedMarker.popup.setDOMContent(
+          createTrashMarkerPopupContent({
+            ...markerData,
+            onFlagClick: onFlagClick
+              ? () => onFlagClick(markerData.pinId, markerData)
+              : null,
+            onUpvoteClick: onUpvoteClick
+              ? () => onUpvoteClick(markerData.pinId, markerData)
+              : null,
+          }),
+        );
         return;
       }
 
@@ -370,7 +507,15 @@ function Map({
       const marker = new mapboxgl.Marker({ element: markerEl })
         .setLngLat([markerData.lng, markerData.lat])
         .addTo(map);
-      const popup = createTrashMarkerPopup(markerData);
+      const popup = createTrashMarkerPopup({
+        ...markerData,
+        onFlagClick: onFlagClick
+          ? () => onFlagClick(markerData.pinId, markerData)
+          : null,
+        onUpvoteClick: onUpvoteClick
+          ? () => onUpvoteClick(markerData.pinId, markerData)
+          : null,
+      });
       const renderedMarkerEntry: RenderedMarker = {
         marker,
         popup,
@@ -407,7 +552,7 @@ function Map({
       marker.setPopup(popup);
       mapMarkerRegistryRef.current.set(markerData.pinId, renderedMarkerEntry);
     });
-  }, [markers]);
+  }, [markers, onFlagClick, onUpvoteClick]);
 
   return (
     <div className="relative w-full h-full">
@@ -420,65 +565,6 @@ function Map({
         <RecenterButton onClick={recenterToUserLocation} />
       </div>
       <div id="map-container" className="w-full h-full" ref={mapContainerRef} />
-    </div>
-  );
-}
-
-interface MapLegendsProps {
-  legends: { label: string; color: string; icon: string }[];
-}
-
-function RecenterButton({ onClick }: { onClick: () => void }) {
-  return (
-    <Button
-      variant="default"
-      size="icon"
-      aria-label="Recenter map to user's location"
-      className="bg-white text-gray-500 active:bg-slate-100 active:scale-95 transition sm:p-4 md:p-2 "
-      onClick={onClick}
-    >
-      <LocateFixed className="size-5" />
-    </Button>
-  );
-}
-
-function MapLegends({ legends }: MapLegendsProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  return (
-    <div className="rounded bg-white p-3 shadow-lg sm:right-5 sm:top-5 sm:p-4 md:p-2">
-      <button
-        type="button"
-        aria-expanded={isExpanded}
-        aria-controls="map-legends-list"
-        className="flex w-full items-center justify-between gap-3"
-        onClick={() => setIsExpanded((expanded) => !expanded)}
-      >
-        <MapIcon className="size-4 text-gray-500" />
-        <ChevronDown
-          aria-hidden="true"
-          className={`size-4 transition-transform ${
-            isExpanded ? "rotate-180" : ""
-          }`}
-        />
-      </button>
-      <div
-        id="map-legends-list"
-        className={`mt-2 flex-col gap-2  sm:gap-4 ${
-          isExpanded ? "flex" : "hidden"
-        }`}
-      >
-        {legends.map((legend) => (
-          <div key={legend.label} className="flex items-center gap-2">
-            <img
-              src={legend.icon}
-              alt={`${legend.label} icon`}
-              className="w-6 h-6"
-            />
-            <span className="text-xs">{legend.label}</span>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }

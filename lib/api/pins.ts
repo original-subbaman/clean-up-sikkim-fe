@@ -55,3 +55,9 @@ export async function uploadTrashPhoto(file: File) {
 
   return photoKey;
 }
+
+export type PIN_REACTION = "UPVOTE" | "DOWNVOTE";
+
+export async function reactToPin(pinId: string, reaction: PIN_REACTION) {
+  return apiClient.post(`/trash-dumps/${pinId}/reactions`, { reaction });
+}

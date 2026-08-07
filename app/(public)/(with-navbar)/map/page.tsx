@@ -302,6 +302,12 @@ function MapPage() {
               onMarkerClick={onMarkerClick}
               onMapClick={() => setSelectedPin(null)}
               onAddNewMarkerClick={handleAddNewMarkerClick}
+              onFlagClick={(pinId) => {
+                console.log("Flag clicked for pin:");
+              }}
+              onUpvoteClick={() => {
+                console.log("Upvote clicked for pin:");
+              }}
               lat={userLocation?.lat}
               lng={userLocation?.lng}
             />
