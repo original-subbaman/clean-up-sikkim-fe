@@ -1,35 +1,38 @@
 "use client";
-import { FAB } from "@/components/common/FAB";
 import FullScreenDialog from "@/components/common/FullScreenDialog";
+import Loading from "@/components/common/Loading";
+import ResponseAlert from "@/components/common/ResponseAlert";
 import { SearchBox } from "@/components/common/SearchBox";
+import type { AddPinFormInputs } from "@/components/forms/AddPinForm";
 import AddPinForm from "@/components/forms/AddPinForm";
+import { useAuth } from "@/components/providers/AuthProvider";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
-  SelectTrigger,
   SelectContent,
   SelectItem,
+  SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { getUserLocation } from "@/lib/utils";
+import { ApiError } from "@/lib/api/client";
+import { getEvent } from "@/lib/api/event";
+import {
+  addPin,
+  uploadTrashPhoto,
+  reactToPin,
+  PIN_REACTION,
+} from "@/lib/api/pins";
+import type { Event } from "@/models/event";
+import type { PinStatus } from "@/models/pins";
+import { fetchPins } from "@/store/features/pins/pinsSlice";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { CheckCircle2Icon, MapPin } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import BottomSheet from "./_components/BottomSheet";
 import EventCard, { type EventCardProps } from "./_components/EventCard";
-import Map from "./_components/MapView";
 import type { MarkerData } from "./_components/MapView";
-import { addPin, uploadTrashPhoto } from "@/lib/api/pins";
-import { ApiError } from "@/lib/api/client";
-import type { AddPinFormInputs } from "@/components/forms/AddPinForm";
-import ResponseAlert from "@/components/common/ResponseAlert";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { fetchPins } from "@/store/features/pins/pinsSlice";
-import Loading from "@/components/common/Loading";
-import { getEvent } from "@/lib/api/event";
-import type { Event } from "@/models/event";
-import type { PinStatus } from "@/models/pins";
-import { useAuth } from "@/components/providers/AuthProvider";
+import Map from "./_components/MapView";
 
 type EventFilter = {
   range: "1km" | "5km" | "20km";
@@ -62,6 +65,8 @@ function MapPage() {
   const [openAddPinModal, setOpenAddPinModal] = useState(false);
   const [addPinError, setAddPinError] = useState<string | null>(null);
   const [addPinSuccess, setAddPinSuccess] = useState<string | null>(null);
+  const [pinReactionError, setPinReactionError] = useState<string | null>(null);
+  const [isPinReactionLoading, setIsPinReactionLoading] = useState(false);
   const [selectedPinLocation, setSelectedPinLocation] = useState<{
     lat: number;
     lng: number;
@@ -176,6 +181,18 @@ function MapPage() {
   }, [addPinSuccess]);
 
   useEffect(() => {
+    if (!pinReactionError) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setPinReactionError(null);
+    }, 3000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [pinReactionError]);
+
+  useEffect(() => {
     dispatch(
       fetchPins({
         status: pinStatusFilters,
@@ -232,6 +249,35 @@ function MapPage() {
     }
   }
 
+  async function handlePinReaction(pinId: string, reaction: PIN_REACTION) {
+    if (!isAuthenticated) {
+      router.push("/login");
+      return;
+    }
+
+    if (isPinReactionLoading) {
+      return;
+    }
+
+    setPinReactionError(null);
+    setIsPinReactionLoading(true);
+
+    try {
+      await reactToPin(pinId, reaction);
+      await dispatch(
+        fetchPins({
+          status: pinStatusFilters,
+        }),
+      ).unwrap();
+    } catch (error) {
+      const message =
+        error instanceof ApiError ? error.message : "Something went wrong.";
+      setPinReactionError(message);
+    } finally {
+      setIsPinReactionLoading(false);
+    }
+  }
+
   return (
     <main className="flex h-[calc(100dvh-4.5rem)] min-h-0 flex-col overflow-hidden md:h-[calc(100dvh-3.75rem)]">
       {addPinSuccess ? (
@@ -239,6 +285,13 @@ function MapPage() {
           title="Success"
           description={addPinSuccess}
           icon={<CheckCircle2Icon />}
+        />
+      ) : null}
+      {pinReactionError ? (
+        <ResponseAlert
+          title="Unable to update reaction"
+          description={pinReactionError}
+          variant="destructive"
         />
       ) : null}
       <FullScreenDialog
@@ -303,15 +356,15 @@ function MapPage() {
               onMapClick={() => setSelectedPin(null)}
               onAddNewMarkerClick={handleAddNewMarkerClick}
               onFlagClick={(pinId) => {
-                console.log("Flag clicked for pin:");
+                handlePinReaction(pinId, "FLAG");
               }}
-              onUpvoteClick={() => {
-                console.log("Upvote clicked for pin:");
+              onUpvoteClick={(pinId) => {
+                handlePinReaction(pinId, "UPVOTE");
               }}
               lat={userLocation?.lat}
               lng={userLocation?.lng}
             />
-            {loading ? (
+            {loading || isPinReactionLoading ? (
               <div className="absolute inset-0 z-20 grid place-items-center bg-surface/60">
                 <Loading />
               </div>
