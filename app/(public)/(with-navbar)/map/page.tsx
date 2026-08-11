@@ -14,23 +14,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ApiError } from "@/lib/api/client";
-import { getEvent } from "@/lib/api/event";
-import {
-  addPin,
-  uploadTrashPhoto,
-  reactToPin,
-  PIN_REACTION,
-} from "@/lib/api/pins";
-import type { Event } from "@/models/event";
+import { type PIN_REACTION } from "@/lib/api/pins";
+import { getRequestErrorMessage } from "@/lib/api/utils";
 import type { PinStatus } from "@/models/pins";
-import { fetchPins } from "@/store/features/pins/pinsSlice";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { CheckCircle2Icon, MapPin } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import BottomSheet from "./_components/BottomSheet";
 import EventCard, { type EventCardProps } from "./_components/EventCard";
+import { useGetEventsQuery } from "@/store/features/events/eventsApi";
+import {
+  useCreatePinMutation,
+  useGetPinsQuery,
+  useReactToPinMutation,
+} from "@/store/features/pins/pinsApi";
 import type { MarkerData } from "./_components/MapView";
 import Map from "./_components/MapView";
 
@@ -58,7 +55,6 @@ function MapPage() {
   });
 
   const router = useRouter();
-  const dispatch = useAppDispatch();
   const { isAuthenticated } = useAuth();
 
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
@@ -66,7 +62,6 @@ function MapPage() {
   const [addPinError, setAddPinError] = useState<string | null>(null);
   const [addPinSuccess, setAddPinSuccess] = useState<string | null>(null);
   const [pinReactionError, setPinReactionError] = useState<string | null>(null);
-  const [isPinReactionLoading, setIsPinReactionLoading] = useState(false);
   const [selectedPinLocation, setSelectedPinLocation] = useState<{
     lat: number;
     lng: number;
@@ -76,41 +71,41 @@ function MapPage() {
     PIN_STATUS_OPTIONS[0].value,
   );
 
-  const [events, setEvents] = useState<Event[]>([]);
-  const [isEventLoading, setIsEventLoading] = useState(false);
-  const [eventError, setEventError] = useState<string | null>(null);
   const [eventFilter, setEventFilter] = useState<EventFilter>({
     range: "20km",
   });
 
-  const { pins, loading } = useAppSelector((state) => {
-    return state.pins;
+  const {
+    data: pins = [],
+    isFetching: isPinsFetching,
+  } = useGetPinsQuery({
+    status: pinStatusFilters,
   });
 
-  const fetchEvents = useCallback(async () => {
-    if (!userLocation) return;
+  const [createPin] = useCreatePinMutation();
 
-    setIsEventLoading(true);
-    setEventError(null);
+  const [submitPinReaction, { isLoading: isPinReactionLoading }] =
+    useReactToPinMutation();
 
-    try {
-      const res = await getEvent({
-        lat: userLocation?.lat || 27.325,
-        lng: userLocation?.lng || 88.611,
-        range: eventFilter.range,
-      });
-      setEvents(res.events);
-    } catch (error) {
-      const message =
-        error instanceof ApiError
-          ? error.message
-          : "Something went wrong while fetching events.";
+  const {
+    data: events = [],
+    isFetching: isEventLoading,
+    error: eventsQueryError,
+  } = useGetEventsQuery(
+    {
+      lat: userLocation?.lat ?? 27.325,
+      lng: userLocation?.lng ?? 88.611,
+      range: eventFilter.range,
+    },
+    { skip: !userLocation },
+  );
 
-      setEventError(message);
-    } finally {
-      setIsEventLoading(false);
-    }
-  }, [userLocation, eventFilter.range]);
+  const eventError = eventsQueryError
+    ? getRequestErrorMessage(
+        eventsQueryError,
+        "Something went wrong while fetching events.",
+      )
+    : null;
 
   const mapMarkers = useMemo(
     () => [
@@ -192,18 +187,6 @@ function MapPage() {
     return () => window.clearTimeout(timeoutId);
   }, [pinReactionError]);
 
-  useEffect(() => {
-    dispatch(
-      fetchPins({
-        status: pinStatusFilters,
-      }),
-    );
-  }, [dispatch, pinStatusFilters]);
-
-  useEffect(() => {
-    fetchEvents();
-  }, [fetchEvents]);
-
   function onMarkerClick(_pinId: string, marker: MarkerData) {
     setSelectedPin(marker);
   }
@@ -225,27 +208,17 @@ function MapPage() {
     setAddPinSuccess(null);
 
     try {
-      const photo = data.photo?.[0];
-      const photoKey = photo ? await uploadTrashPhoto(photo) : undefined;
+      await createPin(data).unwrap();
 
-      await addPin({
-        ...data,
-        photoKey: photoKey ? [photoKey] : undefined,
-      });
       setOpenAddPinModal(false);
       setAddPinSuccess("Pin reported successfully.");
-      await dispatch(
-        fetchPins({
-          status: pinStatusFilters,
-        }),
-      ).unwrap();
     } catch (error) {
-      const message =
-        error instanceof ApiError
-          ? error.message
-          : "Something went wrong while reporting this pin.";
-
-      setAddPinError(message);
+      setAddPinError(
+        getRequestErrorMessage(
+          error,
+          "Something went wrong while reporting this pin.",
+        ),
+      );
     }
   }
 
@@ -260,21 +233,13 @@ function MapPage() {
     }
 
     setPinReactionError(null);
-    setIsPinReactionLoading(true);
 
     try {
-      await reactToPin(pinId, reaction);
-      await dispatch(
-        fetchPins({
-          status: pinStatusFilters,
-        }),
-      ).unwrap();
+      await submitPinReaction({ pinId, reaction }).unwrap();
     } catch (error) {
-      const message =
-        error instanceof ApiError ? error.message : "Something went wrong.";
-      setPinReactionError(message);
-    } finally {
-      setIsPinReactionLoading(false);
+      setPinReactionError(
+        getRequestErrorMessage(error, "Something went wrong."),
+      );
     }
   }
 
@@ -364,7 +329,7 @@ function MapPage() {
               lat={userLocation?.lat}
               lng={userLocation?.lng}
             />
-            {loading || isPinReactionLoading ? (
+            {isPinsFetching || isPinReactionLoading ? (
               <div className="absolute inset-0 z-20 grid place-items-center bg-surface/60">
                 <Loading />
               </div>

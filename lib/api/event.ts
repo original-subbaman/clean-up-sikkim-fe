@@ -1,7 +1,7 @@
 import type { Event } from "@/models/event";
 import { apiClient } from "./client";
 
-type GetEventParams = {
+export type GetEventParams = {
   lat: number;
   lng: number;
   range?: "1km" | "5km" | "20km";
